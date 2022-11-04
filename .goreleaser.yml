@@ -1,10 +1,10 @@
-project_name: {{ .PluginName }}
+project_name: oomlie
 release:
   github:
-    owner: {{ .Owner }}
-    name: {{ .Repo }}
+    owner: jdockerty
+    name: kubectl-oomlie
 builds:
-  - id: {{ .PluginName }}
+  - id: oomlie
     goos:
     - linux
     - windows
@@ -17,12 +17,12 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/{{ .Owner }}/{{ .Repo }}/pkg/version.version=
+      -X github.com/jdockerty/kubectl-oomlie/pkg/version.version=
 archives:
-  - id: {{ .PluginName }}
+  - id: oomlie
     builds:
-    - {{ .PluginName }}
-    name_template: {{ `"{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"` }}
+    - oomlie
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows
       format: zip

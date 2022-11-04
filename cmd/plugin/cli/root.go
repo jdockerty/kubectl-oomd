@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/{{ .Owner }}/{{ .Repo }}/pkg/logger"
-	"github.com/{{ .Owner }}/{{ .Repo }}/pkg/plugin"
+	"github.com/jdockerty/kubectl-oomlie/pkg/logger"
+	"github.com/jdockerty/kubectl-oomlie/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/tj/go-spin"
@@ -21,7 +21,7 @@ var (
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "{{ .PluginName }}",
+		Use:           "oomlie",
 		Short:         "",
 		Long:          `.`,
 		SilenceErrors: true,

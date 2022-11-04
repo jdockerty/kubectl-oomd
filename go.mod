@@ -1,4 +1,4 @@
-module github.com/replicatedhq/krew-plugin-template
+module github.com/jdockerty/kubectl-oomlie
 
 go 1.16
 
@@ -23,6 +23,7 @@ require (
 	github.com/hashicorp/go-version v1.1.0
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/manifoldco/promptui v0.3.2
+	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mholt/archiver v3.1.1+incompatible
 	github.com/onsi/ginkgo v1.8.0 // indirect
 	github.com/onsi/gomega v1.5.0
