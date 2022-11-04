@@ -1,4 +1,4 @@
-# oomlie kubectl
+# oomlie
 
 A `kubectl` plugin to ...
 
