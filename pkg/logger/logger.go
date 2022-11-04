@@ -23,6 +23,11 @@ func (l *Logger) Info(msg string, args ...interface{}) {
 	c.Println(fmt.Sprintf(msg, args...))
 }
 
+func (l *Logger) Debug(msg string, args ...interface{}) {
+	c := color.New(color.FgHiCyan)
+	c.Println(fmt.Sprintf(msg, args...))
+}
+
 func (l *Logger) Error(err error) {
 	c := color.New(color.FgHiRed)
 	c.Println(fmt.Sprintf("%#v", err))
