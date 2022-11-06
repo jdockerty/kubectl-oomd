@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/jdockerty/kubectl-oomlie/pkg/logger"
 	"github.com/jdockerty/kubectl-oomlie/pkg/plugin"
@@ -15,13 +16,14 @@ import (
 
 var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
+    noHeaders bool
 )
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "oomlie",
-		Short:         "",
-		Long:          `.`,
+		Short:         "Show pods which have recently been OOMKilled",
+		Long:          `Show pods which have recently been terminated by Kubernetes due to an 'Out Of Memory' error`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -31,10 +33,23 @@ func RootCmd() *cobra.Command {
 			log := logger.NewLogger()
 
 			namespaceFlag := *KubernetesConfigFlags.Namespace
-			if err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag, log); err != nil {
+			oomPods, err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag, log)
+			if err != nil {
 				return errors.Unwrap(err)
 			}
-			log.Info("")
+
+			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
+			formatting := "%s\t%s\t%s\n"
+
+			if !noHeaders {
+				fmt.Fprintf(t, formatting, "POD", "CONTAINER", "TERMINATION TIME")
+			}
+
+			for _, v := range oomPods {
+				fmt.Fprintf(t, formatting, v.Pod.Name, v.ContainerName, v.TerminatedTime)
+			}
+
+			t.Flush()
 
 			return nil
 		},
@@ -42,6 +57,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
+    cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 

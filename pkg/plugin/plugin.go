@@ -17,29 +17,29 @@ type TerminatedPodInfo struct {
 	StartTime      string // When the pod was started during the termination period.
 }
 
-func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, logger *logger.Logger) error {
+func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
-		return fmt.Errorf("failed to read kubeconfig: %w", err)
+		return nil, fmt.Errorf("failed to read kubeconfig: %w", err)
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		return fmt.Errorf("failed to create clientset: %w", err)
+		return nil, fmt.Errorf("failed to create clientset: %w", err)
 	}
 
 	if namespace == "" {
 		// Retrieve the current namespace from the raw kubeconfig struct
 		currentNamespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
 		if err != nil {
-			return fmt.Errorf("failed to during creating raw kubeconfig: %w", err)
+			return nil, fmt.Errorf("failed to during creating raw kubeconfig: %w", err)
 		}
 		namespace = currentNamespace
 	}
 
 	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to list pods: %w", err)
+		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
 
 	var terminatedPodsInfo []TerminatedPodInfo
@@ -63,9 +63,6 @@ func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, log
 		}
 	}
 
-	for _, v := range terminatedPodsInfo {
-		fmt.Println(v.ContainerName, v.Pod.Name)
-	}
 
-	return nil
+	return terminatedPodsInfo, nil
 }
