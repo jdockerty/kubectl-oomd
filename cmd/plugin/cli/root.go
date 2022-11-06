@@ -21,7 +21,7 @@ var (
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "oomlie",
+		Use:           "kubectl oomlie",
 		Short:         "Show pods which have recently been OOMKilled",
 		Long:          `Show pods which have recently been terminated by Kubernetes due to an 'Out Of Memory' error`,
 		SilenceErrors: true,
