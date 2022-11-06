@@ -6,17 +6,16 @@ The following assumes you have the plugin installed via
 kubectl krew install oomlie
 ```
 
-### Scan images in your current kubecontext
+Once installed, simply run 
 
 ```shell
 kubectl oomlie
 ```
 
-### Scan images in another kubecontext
-
-```shell
-kubectl oomlie --context=context-name
-```
+This will display the pods which have been `OOMKilled`, if there are no pods which meet this requirement, then there will be no output.
 
 ## How it works
-Write a brief description of your plugin here.
+
+This simply checks the current or provided namespace, using your current context, for the pod/container statuses.
+As the exit code of the `OOMKilled` workloads if `137`, we can perform a simple check for this and collect all of the pods which
+meet this condition.
