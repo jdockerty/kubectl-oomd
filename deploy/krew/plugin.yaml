@@ -41,15 +41,8 @@ spec:
     - from: LICENSE
       to: "."
     bin: "oomlie.exe"
-  shortDescription: A new plugin
+  shortDescription: Display pods which have recently been OOMKilled
   homepage: https://github.com/jdockerty/kubectl-oomlie
-  caveats: |
-    Usage:
-      $ kubectl oomlie
-
-    For additional options:
-      $ kubectl oomlie --help
-      or https://github.com/jdockerty/kubectl-oomlie/blob/v0.1.0/doc/USAGE.md
-
   description: |
-    This is a new plugin
+    Display pods and their corresponding containers which have recently
+    been 'OOMKilled'
