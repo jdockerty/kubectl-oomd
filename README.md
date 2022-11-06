@@ -1,6 +1,6 @@
 # oomlie
 
-A `kubectl` plugin to ...
+A `kubectl` plugin to display the pods and containers which have recently been `OOMKilled`.
 
 ## Quick Start
 
