@@ -16,7 +16,7 @@ import (
 
 var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
-    noHeaders bool
+	noHeaders             bool
 )
 
 func RootCmd() *cobra.Command {
@@ -57,7 +57,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
-    cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
+	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 

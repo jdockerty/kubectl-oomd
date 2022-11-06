@@ -63,6 +63,5 @@ func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, log
 		}
 	}
 
-
 	return terminatedPodsInfo, nil
 }
