@@ -5,25 +5,25 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
+	"text/tabwriter"
 
 	"github.com/jdockerty/kubectl-oomlie/pkg/logger"
 	"github.com/jdockerty/kubectl-oomlie/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/tj/go-spin"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
 var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
+    noHeaders bool
 )
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "oomlie",
-		Short:         "",
-		Long:          `.`,
+		Short:         "Show pods which have recently been OOMKilled",
+		Long:          `Show pods which have recently been terminated by Kubernetes due to an 'Out Of Memory' error`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PreRun: func(cmd *cobra.Command, args []string) {
@@ -31,38 +31,25 @@ func RootCmd() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			log := logger.NewLogger()
-			log.Info("")
 
-			s := spin.New()
-			finishedCh := make(chan bool, 1)
-			namespaceName := make(chan string, 1)
-			go func() {
-				lastNamespaceName := ""
-				for {
-					select {
-					case <-finishedCh:
-						fmt.Printf("\r")
-						return
-					case n := <-namespaceName:
-						lastNamespaceName = n
-					case <-time.After(time.Millisecond * 100):
-						if lastNamespaceName == "" {
-							fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s", s.Next())
-						} else {
-							fmt.Printf("\r  \033[36mSearching for namespaces\033[m %s (%s)", s.Next(), lastNamespaceName)
-						}
-					}
-				}
-			}()
-			defer func() {
-				finishedCh <- true
-			}()
-
-			if err := plugin.RunPlugin(KubernetesConfigFlags, namespaceName); err != nil {
+			namespaceFlag := *KubernetesConfigFlags.Namespace
+			oomPods, err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag, log)
+			if err != nil {
 				return errors.Unwrap(err)
 			}
 
-			log.Info("")
+			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
+			formatting := "%s\t%s\t%s\n"
+
+			if !noHeaders {
+				fmt.Fprintf(t, formatting, "POD", "CONTAINER", "TERMINATION TIME")
+			}
+
+			for _, v := range oomPods {
+				fmt.Fprintf(t, formatting, v.Pod.Name, v.ContainerName, v.TerminatedTime)
+			}
+
+			t.Flush()
 
 			return nil
 		},
@@ -70,6 +57,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
+    cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 
