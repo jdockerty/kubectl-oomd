@@ -1,8 +1,8 @@
-project_name: oomlie
+project_name: oomd
 release:
   github:
     owner: jdockerty
-    name: kubectl-oomlie
+    name: kubectl-oomd
 builds:
   - id: oomlie
     goos:
@@ -17,7 +17,7 @@ builds:
       - GO111MODULE=on
     main: cmd/plugin/main.go
     ldflags: -s -w
-      -X github.com/jdockerty/kubectl-oomlie/pkg/version.version=
+      -X github.com/jdockerty/kubectl-oomd/pkg/version.version=
 archives:
   - id: oomlie
     builds:
