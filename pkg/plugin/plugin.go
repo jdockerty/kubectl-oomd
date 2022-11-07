@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// TerminatedPodInfo is a wrapper struct around an OOMKilled Pod's information.
 type TerminatedPodInfo struct {
 	Pod            v1.Pod
 	ContainerName  string // Name of the container within the pod that was terminated, in the case of multi-container pods.
@@ -24,6 +25,7 @@ type MemoryInfo struct {
 	Limit   string
 }
 
+// RunPlugin returns the pod information for thsoe that have been OOMKilled, this provides the plugins' functionality.
 func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
@@ -50,31 +52,32 @@ func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, log
 	}
 
 	var terminatedPodsInfo []TerminatedPodInfo
-	oomedContainerIndex := make(map[string]int) // OOMKilled container name to index mapping, the container which was killed may not always be the 0th index.
 
 	for _, pod := range pods.Items {
-		for _, cStatus := range pod.Status.ContainerStatuses {
+		for _, containerStatus := range pod.Status.ContainerStatuses {
 
 			// The terminated state may be nil, i.e. not terminated, we must check this first.
-			if terminated := cStatus.LastTerminationState.Terminated; terminated != nil {
+			if terminated := containerStatus.LastTerminationState.Terminated; terminated != nil {
 				if terminated.ExitCode == 137 {
 
-					// Simple way to map the container name which was OOMKilled to an index
-					// TODO: Make this general iterating work a lot more elegant, our use-case is satisfied for now.
+					var containerIndex int // The container which was OOMKilled, it may not always be the 0th index.
+
 					for i, c := range pod.Spec.Containers {
-						if cStatus.Name == c.Name {
-							oomedContainerIndex[cStatus.Name] = i
+						// Found OOMKilled container
+						if containerStatus.Name == c.Name {
+							containerIndex = i
+							break
 						}
 					}
 
 					info := TerminatedPodInfo{
 						Pod:            pod,
-						ContainerName:  cStatus.Name,
+						ContainerName:  containerStatus.Name,
 						StartTime:      terminated.StartedAt.String(),
 						TerminatedTime: terminated.FinishedAt.String(),
 						Memory: MemoryInfo{
-							Limit:   pod.Spec.Containers[oomedContainerIndex[cStatus.Name]].Resources.Limits.Memory().String(),
-							Request: pod.Spec.Containers[oomedContainerIndex[cStatus.Name]].Resources.Requests.Memory().String(),
+							Limit:   pod.Spec.Containers[containerIndex].Resources.Limits.Memory().String(),
+							Request: pod.Spec.Containers[containerIndex].Resources.Requests.Memory().String(),
 						},
 					}
 					terminatedPodsInfo = append(terminatedPodsInfo, info)
