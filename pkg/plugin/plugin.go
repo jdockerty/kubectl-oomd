@@ -10,6 +10,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// TerminatedPodInfo is a wrapper struct around an OOMKilled Pod's information.
 type TerminatedPodInfo struct {
 	Pod            v1.Pod
 	ContainerName  string // Name of the container within the pod that was terminated, in the case of multi-container pods.
@@ -24,6 +25,7 @@ type MemoryInfo struct {
 	Limit   string
 }
 
+// RunPlugin returns the pod information for thsoe that have been OOMKilled, this provides the plugins' functionality.
 func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
