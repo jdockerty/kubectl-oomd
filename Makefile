@@ -7,7 +7,7 @@ test:
 
 .PHONY: bin
 bin: fmt vet
-	go build -o bin/oomlie github.com/jdockerty/kubectl-oomlie/cmd/plugin
+	go build -o bin/oomd github.com/jdockerty/kubectl-oomd/cmd/plugin
 
 .PHONY: fmt
 fmt:

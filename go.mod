@@ -1,4 +1,4 @@
-module github.com/jdockerty/kubectl-oomlie
+module github.com/jdockerty/kubectl-oomd
 
 go 1.16
 

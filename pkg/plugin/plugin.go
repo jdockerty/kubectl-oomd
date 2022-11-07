@@ -3,7 +3,7 @@ package plugin
 import (
 	"fmt"
 
-	"github.com/jdockerty/kubectl-oomlie/pkg/logger"
+	"github.com/jdockerty/kubectl-oomd/pkg/logger"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
