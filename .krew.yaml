@@ -9,7 +9,8 @@ spec:
       matchLabels:
         os: linux
         arch: amd64
-    {{ addURIAndSha "https://github.com/jdockerty/kubectl-oomlie/releases/download/{{ .TagName }}/kubectl-oomlie_linux_arm64.tar.gz" .TagName }}
+    uri: "https://github.com/jdockerty/kubectl-oomlie/releases/download/v0.0.1/oomlie_linux_amd64.tar.gz"
+    sha256: "3aa2cc916a2a13a54556752632b7f03df0869dd9d0f4e7007502ebcb1925de5d"
     files:
     - from: "./oomlie"
       to: "."
@@ -20,7 +21,8 @@ spec:
       matchLabels:
         os: darwin
         arch: amd64
-    {{ addURIAndSha "https://github.com/jdockerty/kubectl-oomlie/releases/download/{{ .TagName }}/kubectl-oomlie_darwin_amd64.tar.gz" .TagName }}
+    uri: "https://github.com/jdockerty/kubectl-oomlie/releases/download/v0.0.1/oomlie_darwin_amd64.tar.gz"
+    sha256: "a67f3bbd4de13e90e208cc7039557dafe42e2d84fc3b4ddd09a9adf5dc180238"
     files:
     - from: "./oomlie"
       to: "."
@@ -31,7 +33,8 @@ spec:
       matchLabels:
         os: windows
         arch: amd64
-    {{ addURIAndSha "https://github.com/jdockerty/kubectl-oomlie/releases/download/{{ .TagName }}/kubectl-oomlie_windows_amd64.zip" .TagName }}
+    uri: "https://github.com/jdockerty/kubectl-oomlie/releases/download/v0.0.1/oomlie_windows_amd64.zip"
+    sha256: "32c3a1bc1091385b7bab0c85888e93805a3352d9fc548f9542fb59fb87368ecf"
     files:
     - from: "/oomlie.exe"
       to: "."
