@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   name: oomd
 spec:
-  version: 'v0.0.1'
+  version: 'v0.0.2'
   platforms:
   - selector:
       matchLabels:
