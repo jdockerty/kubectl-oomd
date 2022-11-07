@@ -3,13 +3,13 @@
 The following assumes you have the plugin installed via
 
 ```shell
-kubectl krew install oomlie
+kubectl krew install oomd
 ```
 
 Once installed, simply run 
 
 ```shell
-kubectl oomlie
+kubectl oomd
 ```
 
 This will display the pods which have been `OOMKilled`, if there are no pods which meet this requirement, then there will be no output.

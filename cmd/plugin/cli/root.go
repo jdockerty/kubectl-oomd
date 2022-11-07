@@ -7,8 +7,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/jdockerty/kubectl-oomlie/pkg/logger"
-	"github.com/jdockerty/kubectl-oomlie/pkg/plugin"
+	"github.com/jdockerty/kubectl-oomd/pkg/logger"
+	"github.com/jdockerty/kubectl-oomd/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -21,7 +21,7 @@ var (
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:           "kubectl oomlie",
+		Use:           "kubectl oomd",
 		Short:         "Show pods which have recently been OOMKilled",
 		Long:          `Show pods which have recently been terminated by Kubernetes due to an 'Out Of Memory' error`,
 		SilenceErrors: true,
