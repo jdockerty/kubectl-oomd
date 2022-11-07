@@ -3,7 +3,7 @@ kind: Plugin
 metadata:
   name: oomlie
 spec:
-  version: {{ .TagName }} 
+  version: 'v0.0.1'
   platforms:
   - selector:
       matchLabels:
