@@ -17,6 +17,7 @@ import (
 var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
 	noHeaders             bool
+	allNamespaces         bool
 )
 
 func RootCmd() *cobra.Command {
@@ -39,14 +40,14 @@ func RootCmd() *cobra.Command {
 			}
 
 			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
-			formatting := "%s\t%s\t%s\t%s\t%s\n"
+			singleNamespaceFormatting := "%s\t%s\t%s\t%s\t%s\n"
 
 			if !noHeaders {
-				fmt.Fprintf(t, formatting, "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
+				fmt.Fprintf(t, singleNamespaceFormatting, "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
 			}
 
 			for _, v := range oomPods {
-				fmt.Fprintf(t, formatting, v.Pod.Name, v.ContainerName, v.Memory.Request, v.Memory.Limit, v.TerminatedTime)
+				fmt.Fprintf(t, singleNamespaceFormatting, v.Pod.Name, v.ContainerName, v.Memory.Request, v.Memory.Limit, v.TerminatedTime)
 			}
 
 			t.Flush()
@@ -58,6 +59,7 @@ func RootCmd() *cobra.Command {
 	cobra.OnInitialize(initConfig)
 
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
+	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled across all namespaces")
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 
