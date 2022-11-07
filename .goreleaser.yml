@@ -4,7 +4,7 @@ release:
     owner: jdockerty
     name: kubectl-oomd
 builds:
-  - id: oomlie
+  - id: oomd
     goos:
     - linux
     - windows
@@ -19,9 +19,9 @@ builds:
     ldflags: -s -w
       -X github.com/jdockerty/kubectl-oomd/pkg/version.version=
 archives:
-  - id: oomlie
+  - id: oomd
     builds:
-    - oomlie
+    - oomd
     name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
     - goos: windows
