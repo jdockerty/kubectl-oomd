@@ -39,14 +39,14 @@ func RootCmd() *cobra.Command {
 			}
 
 			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
-			formatting := "%s\t%s\t%s\n"
+			formatting := "%s\t%s\t%s\t%s\t%s\n"
 
 			if !noHeaders {
-				fmt.Fprintf(t, formatting, "POD", "CONTAINER", "TERMINATION TIME")
+				fmt.Fprintf(t, formatting, "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
 			}
 
 			for _, v := range oomPods {
-				fmt.Fprintf(t, formatting, v.Pod.Name, v.ContainerName, v.TerminatedTime)
+				fmt.Fprintf(t, formatting, v.Pod.Name, v.ContainerName, v.Memory.Request, v.Memory.Limit, v.TerminatedTime)
 			}
 
 			t.Flush()
