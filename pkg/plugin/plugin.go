@@ -13,16 +13,32 @@ import (
 // TerminatedPodInfo is a wrapper struct around an OOMKilled Pod's information.
 type TerminatedPodInfo struct {
 	Pod            v1.Pod
+	Memory         MemoryInfo
 	ContainerName  string // Name of the container within the pod that was terminated, in the case of multi-container pods.
 	TerminatedTime string // When the pod was terminated
 	StartTime      string // When the pod was started during the termination period.
-	Memory         MemoryInfo
 }
 
-// MemoryInfo is the pod resource requests, specific to the memory limit and requests.
+// MemoryInfo is the container resource requests, specific to the memory limit and requests.
 type MemoryInfo struct {
 	Request string
 	Limit   string
+}
+
+// GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller.
+func GetNamespace(configFlags *genericclioptions.ConfigFlags, givenNamespace string) (string, error) {
+
+	if givenNamespace == "" {
+
+		// Retrieve the current namespace from the raw kubeconfig struct
+		currentNamespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
+		if err != nil {
+			return "", fmt.Errorf("failed to during creating raw kubeconfig: %w", err)
+		}
+		return currentNamespace, nil
+	}
+
+	return givenNamespace, nil
 }
 
 // RunPlugin returns the pod information for those that have been OOMKilled, this provides the plugins' functionality.
