@@ -7,11 +7,9 @@ import (
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
-func TestGetNamespace(t *testing.T) {
+var KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 
-	if testing.Short() {
-		t.Skip("Skipping test which requires a valid kubeconfig file in short test mode.")
-	}
+func TestGetNamespace(t *testing.T) {
 
 	testNamespace := "test-namespace"
 	tests := map[string]struct {
@@ -21,8 +19,6 @@ func TestGetNamespace(t *testing.T) {
 		"should return given namespace":   {namespace: "my-ns", want: "my-ns"},
 		"should return current namespace": {namespace: "", want: testNamespace},
 	}
-
-	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -38,5 +34,17 @@ func TestGetNamespace(t *testing.T) {
 			assert.Equal(t, tc.want, ns)
 		})
 	}
+}
+
+func TestGetAllNamespaces(t *testing.T) {
+
+    if testing.Short() {
+        t.Skip("skipping test which requires valid kubeconfig file in short mode")
+    }
+
+    namespaces, err := GetAllNamespaces(KubernetesConfigFlags)
+    assert.Nil(t, err)
+
+    assert.True(t, len(namespaces) != 0)
 
 }
