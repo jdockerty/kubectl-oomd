@@ -25,7 +25,7 @@ type MemoryInfo struct {
 	Limit   string
 }
 
-// RunPlugin returns the pod information for thsoe that have been OOMKilled, this provides the plugins' functionality.
+// RunPlugin returns the pod information for those that have been OOMKilled, this provides the plugins' functionality.
 func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
