@@ -13,23 +13,24 @@ func TestGetNamespace(t *testing.T) {
 		t.Skip("Skipping test which requires a valid kubeconfig file in short test mode.")
 	}
 
+	testNamespace := "test-namespace"
 	tests := map[string]struct {
 		namespace string
 		want      string
 	}{
-		"should return given namespace": {namespace: "my-ns", want: "my-ns"},
-        "should return current namespace": {namespace: "", want: "test-namespace"},
+		"should return given namespace":   {namespace: "my-ns", want: "my-ns"},
+		"should return current namespace": {namespace: "", want: testNamespace},
 	}
 
 	KubernetesConfigFlags := genericclioptions.NewConfigFlags(false)
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-            
-            // Hardcode current namespace for test purposes
-            if *KubernetesConfigFlags.Namespace == "" {
-                *KubernetesConfigFlags.Namespace = "test-namespace"
-            }
+
+			// Hardcode current namespace for test purposes
+			if *KubernetesConfigFlags.Namespace == "" {
+				*KubernetesConfigFlags.Namespace = testNamespace
+			}
 
 			ns, err := GetNamespace(KubernetesConfigFlags, tc.namespace)
 			assert.Nil(t, err)
