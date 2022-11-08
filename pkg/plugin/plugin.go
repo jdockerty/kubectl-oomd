@@ -65,7 +65,7 @@ func GetAllNamespaces(configFlags *genericclioptions.ConfigFlags) ([]v1.Namespac
 }
 
 // RunPlugin returns the pod information for those that have been OOMKilled, this provides the plugins' functionality.
-func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
+func RunPlugin(configFlags *genericclioptions.ConfigFlags, providedNamespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read kubeconfig: %w", err)
@@ -76,14 +76,10 @@ func RunPlugin(configFlags *genericclioptions.ConfigFlags, namespace string, log
 		return nil, fmt.Errorf("failed to create clientset: %w", err)
 	}
 
-	if namespace == "" {
-		// Retrieve the current namespace from the raw kubeconfig struct
-		currentNamespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
-		if err != nil {
-			return nil, fmt.Errorf("failed to during creating raw kubeconfig: %w", err)
-		}
-		namespace = currentNamespace
-	}
+    namespace, err := GetNamespace(configFlags, providedNamespace)
+    if err != nil {
+        return nil, fmt.Errorf("unable to retrieve namespace, got %s: %w", providedNamespace, err)
+    }
 
 	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {
