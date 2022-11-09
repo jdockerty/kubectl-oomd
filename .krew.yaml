@@ -43,4 +43,3 @@ spec:
   description: |
     Display pods and their corresponding containers which have recently
     been 'OOMKilled'
-
