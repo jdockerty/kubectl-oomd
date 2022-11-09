@@ -3,7 +3,6 @@ package plugin
 import (
 	"fmt"
 
-	"github.com/jdockerty/kubectl-oomd/pkg/logger"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -41,7 +40,7 @@ func GetNamespace(configFlags *genericclioptions.ConfigFlags, givenNamespace str
 	return givenNamespace, nil
 }
 
-// GetAllNamespaces uses the current kubeconfig in order to retrieve all 
+// GetAllNamespaces uses the current kubeconfig in order to retrieve all
 // namespaces that are available to the caller.
 func GetAllNamespaces(configFlags *genericclioptions.ConfigFlags) ([]v1.Namespace, error) {
 
@@ -60,12 +59,79 @@ func GetAllNamespaces(configFlags *genericclioptions.ConfigFlags) ([]v1.Namespac
 		return nil, fmt.Errorf("failed to list namespaces: %w", err)
 	}
 
-    return namespaces.Items, nil
+	return namespaces.Items, nil
 
 }
 
+// TerminatedPodsFilter is used to filter for pods that contain a terminated container, with an exit code of 137 (OOMKilled).
+func TerminatedPodsFilter(pods []v1.Pod) []v1.Pod {
+
+	var terminatedPods []v1.Pod
+
+	for _, pod := range pods {
+		for _, containerStatus := range pod.Status.ContainerStatuses {
+
+			// The terminated state may be nil, i.e. not terminated, we must check this first.
+			if terminated := containerStatus.LastTerminationState.Terminated; terminated != nil {
+				if terminated.ExitCode == 137 {
+					terminatedPods = append(terminatedPods, pod)
+				}
+			}
+		}
+	}
+
+	return terminatedPods
+}
+
+// GetTerminatedPods retrieves the terminated pod information, bundled into a slice of the informational struct.
+func GetTerminatedPods(client *kubernetes.Clientset, namespace string) ([]TerminatedPodInfo, error) {
+
+	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list pods: %w", err)
+	}
+
+	terminatedPods := TerminatedPodsFilter(pods.Items)
+
+	var terminatedPodsInfo []TerminatedPodInfo
+
+	for _, pod := range terminatedPods {
+
+		for containerIndex, containerStatus := range pod.Status.ContainerStatuses {
+
+			// Not every container within the pod will be in a terminated state, we skip these ones.
+			// This also means we can use the 'containerIndex' to directly access the correct container,
+			// as we know its index within the container status list.
+			if containerStatus.LastTerminationState.Terminated == nil {
+				continue
+			}
+
+			startTime := pod.Status.ContainerStatuses[containerIndex].LastTerminationState.Terminated.StartedAt.String()
+			terminatedTime := pod.Status.ContainerStatuses[containerIndex].LastTerminationState.Terminated.FinishedAt.String()
+
+			// Build our terminated pod info struct
+			info := TerminatedPodInfo{
+				Pod:            pod,
+				ContainerName:  containerStatus.Name,
+				StartTime:      startTime,
+				TerminatedTime: terminatedTime,
+				Memory: MemoryInfo{
+					Limit:   pod.Spec.Containers[containerIndex].Resources.Limits.Memory().String(),
+					Request: pod.Spec.Containers[containerIndex].Resources.Requests.Memory().String(),
+				},
+			}
+
+			// TODO: Since we know all pods here have been in the "terminated state", can we
+			// achieve this same result in an elegant way?
+			terminatedPodsInfo = append(terminatedPodsInfo, info)
+		}
+	}
+
+	return terminatedPodsInfo, nil
+}
+
 // RunPlugin returns the pod information for those that have been OOMKilled, this provides the plugins' functionality.
-func RunPlugin(configFlags *genericclioptions.ConfigFlags, providedNamespace string, logger *logger.Logger) ([]TerminatedPodInfo, error) {
+func RunPlugin(configFlags *genericclioptions.ConfigFlags, providedNamespace string) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read kubeconfig: %w", err)
@@ -76,50 +142,12 @@ func RunPlugin(configFlags *genericclioptions.ConfigFlags, providedNamespace str
 		return nil, fmt.Errorf("failed to create clientset: %w", err)
 	}
 
-    namespace, err := GetNamespace(configFlags, providedNamespace)
-    if err != nil {
-        return nil, fmt.Errorf("unable to retrieve namespace, got %s: %w", providedNamespace, err)
-    }
-
-	pods, err := clientset.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	namespace, err := GetNamespace(configFlags, providedNamespace)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list pods: %w", err)
+		return nil, fmt.Errorf("unable to retrieve namespace, got %s: %w", providedNamespace, err)
 	}
 
-	var terminatedPodsInfo []TerminatedPodInfo
+	terminatedPods, err := GetTerminatedPods(clientset, namespace)
 
-	for _, pod := range pods.Items {
-		for _, containerStatus := range pod.Status.ContainerStatuses {
-
-			// The terminated state may be nil, i.e. not terminated, we must check this first.
-			if terminated := containerStatus.LastTerminationState.Terminated; terminated != nil {
-				if terminated.ExitCode == 137 {
-
-					var containerIndex int // The container which was OOMKilled, it may not always be the 0th index.
-
-					for i, c := range pod.Spec.Containers {
-						// Found OOMKilled container
-						if containerStatus.Name == c.Name {
-							containerIndex = i
-							break
-						}
-					}
-
-					info := TerminatedPodInfo{
-						Pod:            pod,
-						ContainerName:  containerStatus.Name,
-						StartTime:      terminated.StartedAt.String(),
-						TerminatedTime: terminated.FinishedAt.String(),
-						Memory: MemoryInfo{
-							Limit:   pod.Spec.Containers[containerIndex].Resources.Limits.Memory().String(),
-							Request: pod.Spec.Containers[containerIndex].Resources.Requests.Memory().String(),
-						},
-					}
-					terminatedPodsInfo = append(terminatedPodsInfo, info)
-				}
-			}
-		}
-	}
-
-	return terminatedPodsInfo, nil
+	return terminatedPods, nil
 }
