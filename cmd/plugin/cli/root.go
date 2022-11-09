@@ -39,8 +39,9 @@ func RootCmd() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			namespaceFlag := *KubernetesConfigFlags.Namespace
-			oomPods, err := plugin.Run(KubernetesConfigFlags, namespaceFlag)
+			var namespace = *KubernetesConfigFlags.Namespace
+
+			oomPods, err := plugin.Run(KubernetesConfigFlags, allNamespaces, namespace)
 			if err != nil {
 				return errors.Unwrap(err)
 			}
