@@ -83,8 +83,8 @@ func TerminatedPodsFilter(pods []v1.Pod) []v1.Pod {
 	return terminatedPods
 }
 
-// GetTerminatedPods retrieves the terminated pod information, bundled into a slice of the informational struct.
-func GetTerminatedPods(client *kubernetes.Clientset, namespace string) ([]TerminatedPodInfo, error) {
+// BuildTerminatedPodsInfo retrieves the terminated pod information, bundled into a slice of the informational struct.
+func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]TerminatedPodInfo, error) {
 
 	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
 	if err != nil {

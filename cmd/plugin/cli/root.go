@@ -40,7 +40,7 @@ func RootCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			namespaceFlag := *KubernetesConfigFlags.Namespace
-			oomPods, err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag)
+			oomPods, err := plugin.Run(KubernetesConfigFlags, namespaceFlag)
 			if err != nil {
 				return errors.Unwrap(err)
 			}
