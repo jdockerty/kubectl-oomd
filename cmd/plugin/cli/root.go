@@ -7,7 +7,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/jdockerty/kubectl-oomd/pkg/logger"
 	"github.com/jdockerty/kubectl-oomd/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -39,10 +38,9 @@ func RootCmd() *cobra.Command {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log := logger.NewLogger()
 
 			namespaceFlag := *KubernetesConfigFlags.Namespace
-			oomPods, err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag, log)
+			oomPods, err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag)
 			if err != nil {
 				return errors.Unwrap(err)
 			}
