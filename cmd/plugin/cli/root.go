@@ -7,7 +7,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/jdockerty/kubectl-oomd/pkg/logger"
 	"github.com/jdockerty/kubectl-oomd/pkg/plugin"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,6 +16,15 @@ import (
 var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
 	noHeaders             bool
+	allNamespaces         bool
+
+	// When using the namespace provided by the `--namespace/-n` flag or current context.
+	// This represents: Pod, Container, Request, Limit, and Termination Time
+	singleNamespaceFormatting = "%s\t%s\t%s\t%s\t%s\n"
+
+	// When using the `all-namespaces` flag, we must show which namespace the pod was in, this becomes an extra column.
+	// This represents: Namespace, Pod, Container, Request, Limit, and Termination Time
+	allNamespacesFormatting = "%s\t%s\t%s\t%s\t%s\t%s\n"
 )
 
 func RootCmd() *cobra.Command {
@@ -30,23 +38,35 @@ func RootCmd() *cobra.Command {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			log := logger.NewLogger()
 
-			namespaceFlag := *KubernetesConfigFlags.Namespace
-			oomPods, err := plugin.RunPlugin(KubernetesConfigFlags, namespaceFlag, log)
+			namespace := *KubernetesConfigFlags.Namespace
+			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0) // Formatting for table output, similar to other kubectl commands.
+
+			oomPods, err := plugin.Run(KubernetesConfigFlags, allNamespaces, namespace)
 			if err != nil {
 				return errors.Unwrap(err)
 			}
 
-			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
-			formatting := "%s\t%s\t%s\t%s\t%s\n"
+			// All namespaces flag requires an extra 'NAMESPACE' heading
+			if allNamespaces {
+				if !noHeaders {
+					fmt.Fprintf(t, allNamespacesFormatting, "NAMESPACE", "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
+				}
 
-			if !noHeaders {
-				fmt.Fprintf(t, formatting, "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
+				for _, p := range oomPods {
+					fmt.Fprintf(t, allNamespacesFormatting, p.Pod.Namespace, p.Pod.Name, p.ContainerName, p.Memory.Request, p.Memory.Limit, p.TerminatedTime)
+				}
+
+				t.Flush()
+				return nil
 			}
 
-			for _, v := range oomPods {
-				fmt.Fprintf(t, formatting, v.Pod.Name, v.ContainerName, v.Memory.Request, v.Memory.Limit, v.TerminatedTime)
+			if !noHeaders {
+				fmt.Fprintf(t, singleNamespaceFormatting, "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
+			}
+
+			for _, p := range oomPods {
+				fmt.Fprintf(t, singleNamespaceFormatting, p.Pod.Name, p.ContainerName, p.Memory.Request, p.Memory.Limit, p.TerminatedTime)
 			}
 
 			t.Flush()
@@ -58,7 +78,8 @@ func RootCmd() *cobra.Command {
 	cobra.OnInitialize(initConfig)
 
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
-	KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
+	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
+	KubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
