@@ -32,6 +32,17 @@ spec:
     bin: "oomd"
   - selector:
       matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/jdockerty/kubectl-oomd/releases/download/{{ .TagName }}/oomd_{{ .TagName }}_darwin_arm64.tar.gz" .TagName }}
+    files:
+    - from: "./oomd"
+      to: "."
+    - from: LICENSE
+      to: "."
+    bin: "oomd"
+  - selector:
+      matchLabels:
         os: windows
         arch: amd64
     {{addURIAndSha "https://github.com/jdockerty/kubectl-oomd/releases/download/{{ .TagName }}/oomd_{{ .TagName }}_windows_amd64.zip" .TagName }}
