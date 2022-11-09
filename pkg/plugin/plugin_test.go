@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 )
 
@@ -38,13 +40,58 @@ func TestGetNamespace(t *testing.T) {
 
 func TestGetAllNamespaces(t *testing.T) {
 
-    if testing.Short() {
-        t.Skip("skipping test which requires valid kubeconfig file in short mode")
-    }
+	if testing.Short() {
+		t.Skip("skipping test which requires valid kubeconfig file in short mode")
+	}
 
-    namespaces, err := GetAllNamespaces(KubernetesConfigFlags)
-    assert.Nil(t, err)
+	namespaces, err := GetAllNamespaces(KubernetesConfigFlags)
+	assert.Nil(t, err)
 
-    assert.True(t, len(namespaces) != 0)
+	assert.True(t, len(namespaces) != 0)
+
+}
+
+func TestFilterTerminatedPods(t *testing.T) {
+	testPods := []v1.Pod{
+		v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "oomedPod",
+			},
+			Status: v1.PodStatus{
+				ContainerStatuses: []v1.ContainerStatus{
+					v1.ContainerStatus{
+						LastTerminationState: v1.ContainerState{
+							Terminated: &v1.ContainerStateTerminated{
+								ExitCode: 137,
+								Reason:   "OOMKilled",
+							},
+						},
+					},
+				},
+			},
+		},
+		v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "okayPod",
+			},
+			Status: v1.PodStatus{
+				ContainerStatuses: []v1.ContainerStatus{
+					v1.ContainerStatus{
+						LastTerminationState: v1.ContainerState{
+							Terminated: &v1.ContainerStateTerminated{
+								ExitCode: 0,
+								Reason:   "Completed",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	oomed := TerminatedPodsFilter(testPods)
+
+	assert.Equal(t, 1, len(oomed))
+	assert.Equal(t, "oomedPod", oomed[0].Name)
 
 }
