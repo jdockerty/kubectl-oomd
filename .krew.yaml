@@ -1,3 +1,6 @@
+# This is a templated file which is used by the krew-release-bot
+# from the GitHub Action to raise a pull request to the krew-index
+# (https://github.com/kubernetes-sigs/krew-index) with the correct tag
 apiVersion: krew.googlecontainertools.github.com/v1alpha2
 kind: Plugin
 metadata:
