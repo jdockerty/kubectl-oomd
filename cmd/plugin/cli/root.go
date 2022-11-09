@@ -39,21 +39,34 @@ func RootCmd() *cobra.Command {
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			var namespace = *KubernetesConfigFlags.Namespace
+			namespace := *KubernetesConfigFlags.Namespace
+			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0) // Formatting for table output, similar to other kubectl commands.
 
 			oomPods, err := plugin.Run(KubernetesConfigFlags, allNamespaces, namespace)
 			if err != nil {
 				return errors.Unwrap(err)
 			}
 
-			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
+			// All namespaces flag requires an extra 'NAMESPACE' heading
+			if allNamespaces {
+				if !noHeaders {
+					fmt.Fprintf(t, allNamespacesFormatting, "NAMESPACE", "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
+				}
+
+				for _, p := range oomPods {
+					fmt.Fprintf(t, allNamespacesFormatting, p.Pod.Namespace, p.Pod.Name, p.ContainerName, p.Memory.Request, p.Memory.Limit, p.TerminatedTime)
+				}
+
+				t.Flush()
+				return nil
+			}
 
 			if !noHeaders {
 				fmt.Fprintf(t, singleNamespaceFormatting, "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
 			}
 
-			for _, v := range oomPods {
-				fmt.Fprintf(t, singleNamespaceFormatting, v.Pod.Name, v.ContainerName, v.Memory.Request, v.Memory.Limit, v.TerminatedTime)
+			for _, p := range oomPods {
+				fmt.Fprintf(t, singleNamespaceFormatting, p.Pod.Name, p.ContainerName, p.Memory.Request, p.Memory.Limit, p.TerminatedTime)
 			}
 
 			t.Flush()
