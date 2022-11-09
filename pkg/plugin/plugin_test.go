@@ -40,19 +40,6 @@ func TestGetNamespace(t *testing.T) {
 	}
 }
 
-func TestGetAllNamespaces(t *testing.T) {
-
-	if testing.Short() {
-		t.Skip("skipping test which requires valid kubeconfig file in short mode")
-	}
-
-	namespaces, err := GetAllNamespaces(KubernetesConfigFlags)
-	assert.Nil(t, err)
-
-	assert.True(t, len(namespaces) != 0)
-
-}
-
 func TestFilterTerminatedPods(t *testing.T) {
 	testPods := []v1.Pod{
 		v1.Pod{

@@ -41,29 +41,6 @@ func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNam
 	return givenNamespace, nil
 }
 
-// GetAllNamespaces uses the current kubeconfig in order to retrieve all
-// namespaces that are available to the caller.
-func GetAllNamespaces(configFlags *genericclioptions.ConfigFlags) ([]v1.Namespace, error) {
-
-	config, err := configFlags.ToRESTConfig()
-	if err != nil {
-		return nil, fmt.Errorf("failed to read kubeconfig: %w", err)
-	}
-
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create clientset: %w", err)
-	}
-
-	namespaces, err := clientset.CoreV1().Namespaces().List(metav1.ListOptions{})
-	if err != nil {
-		return nil, fmt.Errorf("failed to list namespaces: %w", err)
-	}
-
-	return namespaces.Items, nil
-
-}
-
 // TerminatedPodsFilter is used to filter for pods that contain a terminated container, with an exit code of 137 (OOMKilled).
 func TerminatedPodsFilter(pods []v1.Pod) []v1.Pod {
 
