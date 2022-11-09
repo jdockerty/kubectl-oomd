@@ -108,8 +108,8 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 	return terminatedPodsInfo, nil
 }
 
-// RunPlugin returns the pod information for those that have been OOMKilled, this provides the plugins' functionality.
-func RunPlugin(configFlags *genericclioptions.ConfigFlags, providedNamespace string) ([]TerminatedPodInfo, error) {
+// Runreturns the pod information for those that have been OOMKilled, this provides the plugin functionality.
+func Run(configFlags *genericclioptions.ConfigFlags, allNamespaces bool, providedNamespace string) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read kubeconfig: %w", err)
@@ -120,12 +120,15 @@ func RunPlugin(configFlags *genericclioptions.ConfigFlags, providedNamespace str
 		return nil, fmt.Errorf("failed to create clientset: %w", err)
 	}
 
-	namespace, err := GetNamespace(configFlags, providedNamespace)
+	namespace, err := GetNamespace(configFlags, allNamespaces, providedNamespace)
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve namespace, got %s: %w", providedNamespace, err)
 	}
 
-	terminatedPods, err := GetTerminatedPods(clientset, namespace)
+	terminatedPods, err := BuildTerminatedPodsInfo(clientset, namespace)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build terminated pod information: %w", err)
+	}
 
 	return terminatedPods, nil
 }
