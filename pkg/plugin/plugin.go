@@ -25,10 +25,11 @@ type MemoryInfo struct {
 }
 
 // GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller.
-func GetNamespace(configFlags *genericclioptions.ConfigFlags, givenNamespace string) (string, error) {
+func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNamespace string) (string, error) {
 
-	if givenNamespace == "" {
-
+	if givenNamespace == "" && all {
+		return metav1.NamespaceAll, nil
+	} else if givenNamespace == "" {
 		// Retrieve the current namespace from the raw kubeconfig struct
 		currentNamespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
 		if err != nil {

@@ -16,10 +16,12 @@ func TestGetNamespace(t *testing.T) {
 	testNamespace := "test-namespace"
 	tests := map[string]struct {
 		namespace string
+		all       bool
 		want      string
 	}{
-		"should return given namespace":   {namespace: "my-ns", want: "my-ns"},
-		"should return current namespace": {namespace: "", want: testNamespace},
+		"should return given namespace":   {namespace: "my-ns", all: false, want: "my-ns"},
+		"should return current namespace": {namespace: "", all: false, want: testNamespace},
+		"should return all namespaces":    {namespace: "", all: true, want: metav1.NamespaceAll},
 	}
 
 	for name, tc := range tests {
@@ -30,7 +32,7 @@ func TestGetNamespace(t *testing.T) {
 				*KubernetesConfigFlags.Namespace = testNamespace
 			}
 
-			ns, err := GetNamespace(KubernetesConfigFlags, tc.namespace)
+			ns, err := GetNamespace(KubernetesConfigFlags, tc.all, tc.namespace)
 			assert.Nil(t, err)
 
 			assert.Equal(t, tc.want, ns)
