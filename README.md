@@ -25,7 +25,8 @@ my-app-5bcbcdf97-k8g8g     infoapp          1G          8G        2022-11-07 14:
 my-app-5bcbcdf97-mf65j     infoapp          1G          8G        2022-11-07 14:34:57 +0000 GMT
 ```
 
-You can specify another namespace, as you would with other `kubectl` commands.
+You can specify another namespace, as you would with other `kubectl` commands or use `--all-namespaces`/`-A` to check against them all.
+
 
 ```
 kubectl oomd -n oomkilled
