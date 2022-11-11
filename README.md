@@ -7,6 +7,24 @@ A `kubectl` plugin to display the pods and containers which have recently been `
 Via [`krew`](https://krew.sigs.k8s.io/)
 ```
 kubectl krew install oomd
+kubectl oomd
+```
+
+Or manually from the [releases](https://github.com/jdockerty/kubectl-oomd/releases) page, for example
+
+```shell
+# Download the release for your OS
+wget https://github.com/jdockerty/kubectl-oomd/releases/download/v0.0.4/oomd_linux_amd64.tar.gz
+
+# Extract files from the archive
+tar -xvf oomd_linux_amd64.tar.gz
+
+# Move the binary into your PATH, renaming the application to 'kubectl-oomd' to
+# satisfy the plugin convention
+mv oomd "${HOME}"/.local/bin/kubectl-oomd
+
+# Run the plugin
+kubectl oomd
 ```
 
 ## Usage
