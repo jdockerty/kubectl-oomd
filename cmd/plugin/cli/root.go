@@ -87,7 +87,7 @@ func RootCmd() *cobra.Command {
 
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
-	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version information")
+	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version and build information")
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 
