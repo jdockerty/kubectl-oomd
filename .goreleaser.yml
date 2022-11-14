@@ -17,8 +17,9 @@ builds:
       - CGO_ENABLED=0
       - GO111MODULE=on
     main: cmd/plugin/main.go
-    ldflags: -s -w
-      -X github.com/jdockerty/kubectl-oomd/pkg/version.version=
+    ldflags:
+      - -s -w -X github.com/jdockerty/kubectl-oomd/pkg/version.version={{ .Version }}
+      - -X github.com/jdockerty/kubectl-oomd/pkg/version.commit={{ .Commit }}
 archives:
   - id: oomd
     builds:
