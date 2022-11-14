@@ -14,7 +14,8 @@ var (
 Version: %s
 Commit: %s
 Platform: %s
-Go: %s`
+Go: %s
+`
 )
 
 // Version contains all of the information about the build of the current release.

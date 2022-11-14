@@ -8,6 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/jdockerty/kubectl-oomd/pkg/plugin"
+	"github.com/jdockerty/kubectl-oomd/pkg/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -17,6 +18,7 @@ var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
 	noHeaders             bool
 	allNamespaces         bool
+	showVersion           bool
 
 	// When using the namespace provided by the `--namespace/-n` flag or current context.
 	// This represents: Pod, Container, Request, Limit, and Termination Time
@@ -38,6 +40,12 @@ func RootCmd() *cobra.Command {
 			viper.BindPFlags(cmd.Flags())
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+
+			if showVersion {
+				versionInfo := version.GetVersion()
+				fmt.Printf("%s", versionInfo.ToString())
+				return nil
+			}
 
 			namespace := *KubernetesConfigFlags.Namespace
 			t := tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0) // Formatting for table output, similar to other kubectl commands.
@@ -79,6 +87,7 @@ func RootCmd() *cobra.Command {
 
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
+	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version information")
 	KubernetesConfigFlags = genericclioptions.NewConfigFlags(true)
 	KubernetesConfigFlags.AddFlags(cmd.Flags())
 
