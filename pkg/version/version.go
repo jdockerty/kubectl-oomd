@@ -28,6 +28,7 @@ type Version struct {
 	Version   string
 }
 
+// ToString populates the version/build information into the output template and returns it for use.
 func (v *Version) ToString() string {
 	return fmt.Sprintf(outputTemplate, v.Version, v.Commit, v.Platform, v.GoVersion)
 }
