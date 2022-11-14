@@ -19,7 +19,8 @@ Go: %s
 )
 
 // Version contains all of the information about the build of the current release.
-// It is expected that this is ran on tagged releases and populated by `-ldfags` of the `go build` commmand.
+// It is expected that this is ran on tagged releases and populated by `-ldflags` of the `go build` commmand.
+// See the .gorelease.yml ldflags section for details.
 type Version struct {
 	Commit    string
 	GoVersion string
