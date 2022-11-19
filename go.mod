@@ -31,7 +31,7 @@ require (
 	github.com/go-openapi/jsonreference v0.0.0-20160704190145-13c6e3589ad9 // indirect
 	github.com/go-openapi/spec v0.0.0-20160808142527-6aced65f8501 // indirect
 	github.com/go-openapi/swag v0.0.0-20160704191624-1d0bd113de87 // indirect
-	github.com/gogo/protobuf v1.2.1 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/google/btree v1.0.0 // indirect
