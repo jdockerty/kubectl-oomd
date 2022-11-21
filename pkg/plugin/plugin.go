@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -64,7 +65,7 @@ func TerminatedPodsFilter(pods []v1.Pod) []v1.Pod {
 // BuildTerminatedPodsInfo retrieves the terminated pod information, bundled into a slice of the informational struct.
 func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]TerminatedPodInfo, error) {
 
-	pods, err := client.CoreV1().Pods(namespace).List(metav1.ListOptions{})
+	pods, err := client.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
