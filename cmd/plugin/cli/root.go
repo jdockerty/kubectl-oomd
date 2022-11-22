@@ -27,13 +27,16 @@ var (
 	// When using the `all-namespaces` flag, we must show which namespace the pod was in, this becomes an extra column.
 	// This represents: Namespace, Pod, Container, Request, Limit, and Termination Time
 	allNamespacesFormatting = "%s\t%s\t%s\t%s\t%s\t%s\n"
+
+	// Formatting for table output, similar to other kubectl commands.
+	t = tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
 )
 
 func RootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "kubectl oomd",
-		Short:         "Show pods which have recently been OOMKilled",
-		Long:          `Show pods which have recently been terminated by Kubernetes due to an 'Out Of Memory' error`,
+		Short:         "Show pods/containers which have recently been OOMKilled",
+		Long:          `Show pods and containers which have recently been terminated by Kubernetes due to an 'Out Of Memory' error`,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PreRun: func(cmd *cobra.Command, args []string) {
