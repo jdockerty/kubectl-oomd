@@ -109,7 +109,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 	return terminatedPodsInfo, nil
 }
 
-// Runreturns the pod information for those that have been OOMKilled, this provides the plugin functionality.
+// Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.
 func Run(configFlags *genericclioptions.ConfigFlags, allNamespaces bool, providedNamespace string) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
