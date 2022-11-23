@@ -16,9 +16,16 @@ import (
 
 var (
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
-	noHeaders             bool
-	allNamespaces         bool
-	showVersion           bool
+
+	// Provides the `--no-headers` flag, this removes them from being printed to stdout.
+	noHeaders bool
+
+	// Provides the `--all-namespaces` or `-A` flag which iterates over all namespaces
+	// and adds an extra 'NAMESPACE' header to the output.
+	allNamespaces bool
+
+	// Provides the `--version` or `-v` flag, displaying build/version information.
+	showVersion bool
 
 	// When using the namespace provided by the `--namespace/-n` flag or current context.
 	// This represents: Pod, Container, Request, Limit, and Termination Time
