@@ -60,6 +60,7 @@ func RootCmd() *cobra.Command {
 				return nil
 			}
 
+			// The namespace provided to the flag takes precedence.
 			namespace := *KubernetesConfigFlags.Namespace
 
 			oomPods, err := plugin.Run(KubernetesConfigFlags, allNamespaces, namespace)
@@ -67,7 +68,7 @@ func RootCmd() *cobra.Command {
 				return errors.Unwrap(err)
 			}
 
-			// All namespaces flag requires the extra 'NAMESPACE' heading
+			// All namespaces flag requires the extra 'NAMESPACE' heading.
 			if allNamespaces {
 				if !noHeaders {
 					_, err := fmt.Fprintf(t, allNamespacesFormatting, "NAMESPACE", "POD", "CONTAINER", "REQUEST", "LIMIT", "TERMINATION TIME")
