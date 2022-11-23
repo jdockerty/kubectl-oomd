@@ -15,6 +15,9 @@ import (
 )
 
 var (
+
+	// KubernetesConfigFlags provides the generic flags which are available to
+	// regular `kubectl` commands, such as `--context` and `--namespace`.
 	KubernetesConfigFlags *genericclioptions.ConfigFlags
 
 	// Provides the `--no-headers` flag, this removes them from being printed to stdout.
