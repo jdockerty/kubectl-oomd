@@ -25,7 +25,8 @@ type MemoryInfo struct {
 	Limit   string
 }
 
-// GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller.
+// GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller
+// or handle the return of the all namespaces shortcut when the flag is set.
 func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNamespace string) (string, error) {
 
 	if givenNamespace == "" && all {
@@ -110,7 +111,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 }
 
 // Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.
-func Run(configFlags *genericclioptions.ConfigFlags, allNamespaces bool, providedNamespace string) ([]TerminatedPodInfo, error) {
+func Run(configFlags *genericclioptions.ConfigFlags, namespace string) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to read kubeconfig: %w", err)
@@ -119,11 +120,6 @@ func Run(configFlags *genericclioptions.ConfigFlags, allNamespaces bool, provide
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create clientset: %w", err)
-	}
-
-	namespace, err := GetNamespace(configFlags, allNamespaces, providedNamespace)
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve namespace, got %s: %w", providedNamespace, err)
 	}
 
 	terminatedPods, err := BuildTerminatedPodsInfo(clientset, namespace)
