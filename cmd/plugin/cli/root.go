@@ -61,9 +61,14 @@ func RootCmd() *cobra.Command {
 			}
 
 			// The namespace provided to the flag takes precedence.
-			namespace := *KubernetesConfigFlags.Namespace
+			ns := *KubernetesConfigFlags.Namespace
 
-			oomPods, err := plugin.Run(KubernetesConfigFlags, allNamespaces, namespace)
+			namespace, err := plugin.GetNamespace(KubernetesConfigFlags, allNamespaces, ns)
+			if err != nil {
+				return fmt.Errorf("unable to retrieve namespace, got %s: %w", ns, err)
+			}
+
+			oomPods, err := plugin.Run(KubernetesConfigFlags, namespace)
 			if err != nil {
 				return errors.Unwrap(err)
 			}
