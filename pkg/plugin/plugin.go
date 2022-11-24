@@ -25,7 +25,8 @@ type MemoryInfo struct {
 	Limit   string
 }
 
-// GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller.
+// GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller
+// or handle the return of the all namespaces shortcut when the flag is set.
 func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNamespace string) (string, error) {
 
 	if givenNamespace == "" && all {
