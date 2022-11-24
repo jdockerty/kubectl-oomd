@@ -14,7 +14,7 @@ Or manually from the [releases](https://github.com/jdockerty/kubectl-oomd/releas
 
 ```shell
 # Download the release for your OS
-wget https://github.com/jdockerty/kubectl-oomd/releases/download/v0.0.5/oomd_linux_amd64.tar.gz
+wget https://github.com/jdockerty/kubectl-oomd/releases/download/v0.0.6/oomd_linux_amd64.tar.gz
 
 # Extract files from the archive
 tar -xvf oomd_linux_amd64.tar.gz
