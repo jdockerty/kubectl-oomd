@@ -73,6 +73,15 @@ func RootCmd() *cobra.Command {
 				return errors.Unwrap(err)
 			}
 
+			if len(oomPods) == 0 {
+				if allNamespaces {
+					fmt.Println("No out of memory pods found.")
+					return nil
+				}
+				fmt.Printf("No out of memory pods found in %s namespace.\n", namespace)
+				return nil
+			}
+
 			// All namespaces flag requires the extra 'NAMESPACE' heading.
 			if allNamespaces {
 				if !noHeaders {
