@@ -73,6 +73,7 @@ func RootCmd() *cobra.Command {
 				return errors.Unwrap(err)
 			}
 
+			// Handle no pods/containers found in a similar fashion to `kubectl`
 			if len(oomPods) == 0 {
 				if allNamespaces {
 					fmt.Println("No out of memory pods found.")
