@@ -10,7 +10,7 @@ kubectl krew install oomd
 kubectl oomd
 ```
 
-Or manually from the [releases](https://github.com/jdockerty/kubectl-oomd/releases) page, for example
+Or manually from the [releases](https://github.com/jdockerty/kubectl-oomd/releases) page, for example with `linux_amd64`
 
 ```shell
 # Download the release for your OS
