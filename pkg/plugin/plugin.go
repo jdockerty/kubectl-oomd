@@ -76,17 +76,17 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 
 	for _, pod := range terminatedPods {
 
-		for containerIndex, containerStatus := range pod.Status.ContainerStatuses {
+		for i, containerStatus := range pod.Status.ContainerStatuses {
 
 			// Not every container within the pod will be in a terminated state, we skip these ones.
-			// This also means we can use the 'containerIndex' to directly access the correct container,
+			// This also means we can use the relevant index to directly access the container,
 			// as we know its index within the container status list.
 			if containerStatus.LastTerminationState.Terminated == nil {
 				continue
 			}
 
-			startTime := pod.Status.ContainerStatuses[containerIndex].LastTerminationState.Terminated.StartedAt.String()
-			terminatedTime := pod.Status.ContainerStatuses[containerIndex].LastTerminationState.Terminated.FinishedAt.String()
+			startTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
+			terminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt.String()
 
 			// Build our terminated pod info struct
 			info := TerminatedPodInfo{
@@ -95,8 +95,8 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 				StartTime:      startTime,
 				TerminatedTime: terminatedTime,
 				Memory: MemoryInfo{
-					Limit:   pod.Spec.Containers[containerIndex].Resources.Limits.Memory().String(),
-					Request: pod.Spec.Containers[containerIndex].Resources.Requests.Memory().String(),
+					Limit:   pod.Spec.Containers[i].Resources.Limits.Memory().String(),
+					Request: pod.Spec.Containers[i].Resources.Requests.Memory().String(),
 				},
 			}
 
@@ -109,7 +109,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 	return terminatedPodsInfo, nil
 }
 
-// Runreturns the pod information for those that have been OOMKilled, this provides the plugin functionality.
+// Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.
 func Run(configFlags *genericclioptions.ConfigFlags, allNamespaces bool, providedNamespace string) ([]TerminatedPodInfo, error) {
 	config, err := configFlags.ToRESTConfig()
 	if err != nil {
