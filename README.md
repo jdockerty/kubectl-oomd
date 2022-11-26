@@ -64,3 +64,13 @@ my-app-5bcbcdf97-7j5rd     infoapp          1G          8G        2022-11-07 14:
 my-app-5bcbcdf97-k8g8g     infoapp          1G          8G        2022-11-07 14:35:02 +0000 GMT
 my-app-5bcbcdf97-mf65j     infoapp          1G          8G        2022-11-07 14:34:57 +0000 GMT
 ```
+
+### Development
+
+If you wish to force some `OOMKilled` for testing purposes, you can use [`oomer`](https://github.com/jdockerty/oomer)
+or simply run
+
+    kubectl apply -f https://github.com/jdockerty/oomer/blob/main/oomer.yaml
+
+This will create the `oomkilled` namespace and a `Deployment` with pods that continually exit with code `137`,
+in order to be picked up by `oomd`.
