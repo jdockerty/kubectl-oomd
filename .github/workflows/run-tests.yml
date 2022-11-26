@@ -1,0 +1,34 @@
+name: tests
+on:
+  push:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+
+        # This allows us to catch simple errors early, before running everything
+      - name: Run unit tests 
+        run: go test -v -race -short ./... 
+
+      - name: Create K8s cluster with Kind
+        uses: helm/kind-action@v1.4.0
+
+      - name: Get kubectl
+        uses: azure/setup-kubectl@v3
+          
+      - name: Run oomer deployment
+        run: make force-oom 
+
+      - name: Wait for pods to error 
+        run: "sleep 15" 
+
+      - name: Run all tests
+        run: go test -v -race ./...
