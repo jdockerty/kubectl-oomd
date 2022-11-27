@@ -19,10 +19,6 @@ jobs:
         uses: helm/kind-action@v1.4.0
       - name: Get kubectl
         uses: azure/setup-kubectl@v3
-      - name: Run oomer deployment
-        run: make force-oom 
-      - name: Wait for pods to error 
-        run: "sleep 15" 
       - name: Run all tests
         run: go test -v -race ./...
 
