@@ -92,8 +92,12 @@ func RootCmd() *cobra.Command {
 				return nil
 			}
 
-			if sortField == sortFieldTerminationTime {
+			// Mutate our pods slice in-place depending on the sort-field flag
+			// that is used. The default is to do nothing.
+			switch sortField {
+			case sortFieldTerminationTime:
 				oomPods.SortByTimestamp()
+			default:
 			}
 
 			// All namespaces flag requires the extra 'NAMESPACE' heading.
