@@ -32,6 +32,10 @@ type TerminatedPodInfo struct {
 	ContainerName  string // Name of the container within the pod that was terminated, in the case of multi-container pods.
 	TerminatedTime string // When the pod was terminated
 	StartTime      string // When the pod was started during the termination period.
+
+	// Internal representation of TerminatedTime, used for operations which require
+	// the explicit time.Time type, such as sorting.
+	terminatedTime time.Time
 }
 
 // MemoryInfo is the container resource requests, specific to the memory limit and requests.
@@ -94,7 +98,7 @@ func TerminatedPodsFilter(pods []v1.Pod) []v1.Pod {
 }
 
 // BuildTerminatedPodsInfo retrieves the terminated pod information, bundled into a slice of the informational struct.
-func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]TerminatedPodInfo, error) {
+func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (TerminatedPods, error) {
 
 	pods, err := client.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
@@ -116,15 +120,16 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 				continue
 			}
 
-			startTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
-			terminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt.String()
+			containerStartTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
+			containerTerminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt
 
 			// Build our terminated pod info struct
 			info := TerminatedPodInfo{
 				Pod:            pod,
 				ContainerName:  containerStatus.Name,
-				StartTime:      startTime,
-				TerminatedTime: terminatedTime,
+				StartTime:      containerStartTime,
+				terminatedTime: containerTerminatedTime.Time,
+				TerminatedTime: containerTerminatedTime.String(),
 				Memory: MemoryInfo{
 					Limit:   pod.Spec.Containers[i].Resources.Limits.Memory().String(),
 					Request: pod.Spec.Containers[i].Resources.Requests.Memory().String(),
