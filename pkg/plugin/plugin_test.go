@@ -16,15 +16,27 @@ var KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 
 const (
 
-    // The namespace to use with tests that do not require access to a working cluster.
-	testNamespace            = "test-namespace"
+	// The namespace to use with tests that do not require access to a working cluster.
+	testNamespace = "test-namespace"
 
-    // The namespace defined for use with the `oomer` manifest.
+	// The namespace defined for use with the `oomer` manifest.
 	integrationTestNamespace = "oomkilled"
 
-    // A manifest which contains the `oomkilled` namespace and `oomer` deployment for testing purposes.
-	forceOOMKilledManifest   = "https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml"
+	// A manifest which contains the `oomkilled` namespace and `oomer` deployment for testing purposes.
+	forceOOMKilledManifest = "https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml"
 )
+
+func setupIntegrationTestDependencies(t *testing.T) {
+
+	err := applyOrDeleteOOMKilledManifest(false)
+	if err != nil {
+		t.Fatalf("unable to apply OOMKilled manifest: %s", err)
+	}
+	defer applyOrDeleteOOMKilledManifest(true)
+
+	t.Log("Waiting 20 seconds for pods to start being OOMKilled...")
+	time.Sleep(20 * time.Second)
+}
 
 // applyOrDeleteOOMKilledManifest is a rather hacky way to utilise `kubectl` within
 // our test to apply the oomer manifest, this means we do not have to use a large
@@ -52,15 +64,7 @@ func TestRunPlugin(t *testing.T) {
 		t.Skipf("skipping %s which requires running cluster", t.Name())
 	}
 
-	err := applyOrDeleteOOMKilledManifest(false)
-	if err != nil {
-		t.Fatalf("unable to apply OOMKilled manifest: %s", err)
-	}
-    defer applyOrDeleteOOMKilledManifest(true)
-
-	t.Log("Waiting 20 seconds for pods to start being OOMKilled...")
-	time.Sleep(20 * time.Second)
-
+	setupIntegrationTestDependencies(t)
 
 	pods, err := Run(KubernetesConfigFlags, integrationTestNamespace)
 	assert.Nil(t, err)
