@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"fmt"
+	"sort"
+	"time"
 
 	"golang.org/x/net/context"
 	v1 "k8s.io/api/core/v1"
@@ -10,6 +12,18 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
+
+// TerminatedPods is a wrapper type around multiple TerminatedPodInfo structs.
+type TerminatedPods []TerminatedPodInfo
+
+// SortByTimestamp sorts the terminated pods slice in descending order, in other
+// words, it shows the first OOMKilled pod found at the top of the table and the
+// most recent on at the end.
+func (t TerminatedPods) SortByTimestamp() {
+	sort.Slice(t, func(i, j int) bool {
+		return t[i].terminatedTime.After(t[j].terminatedTime)
+	})
+}
 
 // TerminatedPodInfo is a wrapper struct around an OOMKilled Pod's information.
 type TerminatedPodInfo struct {
