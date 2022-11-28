@@ -16,12 +16,12 @@ import (
 // TerminatedPods is a wrapper type around multiple TerminatedPodInfo structs.
 type TerminatedPods []TerminatedPodInfo
 
-// SortByTimestamp sorts the terminated pods slice in descending order, in other
+// SortByTimestamp sorts the terminated pods slice in ascending order, in other
 // words, it shows the first OOMKilled pod found at the top of the table and the
-// most recent on at the end.
+// most recent one at the end.
 func (t TerminatedPods) SortByTimestamp() {
 	sort.Slice(t, func(i, j int) bool {
-		return t[i].terminatedTime.After(t[j].terminatedTime)
+		return t[i].terminatedTime.Before(t[j].terminatedTime)
 	})
 }
 
@@ -146,7 +146,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 }
 
 // Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.
-func Run(configFlags *genericclioptions.ConfigFlags, namespace string) ([]TerminatedPodInfo, error) {
+func Run(configFlags *genericclioptions.ConfigFlags, namespace string) (TerminatedPods, error) {
 
 	clientset, _, err := getK8sClientAndConfig(configFlags)
 	if err != nil {

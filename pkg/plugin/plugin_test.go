@@ -167,10 +167,10 @@ func TestSortByTimestamp(t *testing.T) {
 
 	tests.SortByTimestamp()
 
-	assert.Equal(t, tests[0].ContainerName, "1 month")
-	assert.Equal(t, tests[1].ContainerName, "2 days")
-	assert.Equal(t, tests[2].ContainerName, "1 day")
-	assert.Equal(t, tests[3].ContainerName, "now")
+	assert.Equal(t, tests[0].ContainerName, "now")
+	assert.Equal(t, tests[1].ContainerName, "1 day")
+	assert.Equal(t, tests[2].ContainerName, "2 days")
+	assert.Equal(t, tests[3].ContainerName, "1 month")
 
 	t.Log("Pods are in descending order.")
 
