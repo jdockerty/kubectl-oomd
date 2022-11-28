@@ -93,7 +93,9 @@ func RootCmd() *cobra.Command {
 			}
 
 			// Mutate our pods slice in-place depending on the sort-field flag
-			// that is used. The default is to do nothing.
+			// that is used. The default is to do nothing to the slice; coincidentally
+			// this does sort by container name, or namespace if `--all-namespaces`
+			// flag is used.
 			switch sortField {
 			case sortFieldTerminationTime:
 				oomPods.SortByTimestamp()
