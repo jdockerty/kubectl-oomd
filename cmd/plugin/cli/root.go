@@ -47,6 +47,10 @@ var (
 )
 
 const (
+	// Do not use any sorting, this is the default and acts as a value used
+	// in order to catch other values that are passed which are unsupported.
+	sortFieldDefault = "none"
+
 	// Sort by termination timestamp in ascending order.
 	sortFieldTerminationTime = "time"
 )
@@ -99,7 +103,9 @@ func RootCmd() *cobra.Command {
 			switch sortField {
 			case sortFieldTerminationTime:
 				oomPods.SortByTimestamp()
+			case sortFieldDefault:
 			default:
+				return fmt.Errorf("%s is not a supported sortable field.", sortField)
 			}
 
 			// All namespaces flag requires the extra 'NAMESPACE' heading.
@@ -145,7 +151,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
-	cmd.Flags().StringVar(&sortField, "sort-field", "", "Sort by particular field. (Only 'time' is supported currently)")
+	cmd.Flags().StringVar(&sortField, "sort-field", "none", "Sort by particular field. (Only 'time' is supported currently)")
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
 	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version and build information")
