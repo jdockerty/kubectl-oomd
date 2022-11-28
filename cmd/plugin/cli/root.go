@@ -30,6 +30,10 @@ var (
 	// Provides the `--version` or `-v` flag, displaying build/version information.
 	showVersion bool
 
+	// Provides the `--sort-field` flag, allowing sorting by field.
+	// Only 'time' is supported currently.
+	sortField string
+
 	// When using the namespace provided by the `--namespace/-n` flag or current context.
 	// This represents: Pod, Container, Request, Limit, and Termination Time
 	singleNamespaceFormatting = "%s\t%s\t%s\t%s\t%s\n"
@@ -40,6 +44,11 @@ var (
 
 	// Formatting for table output, similar to other kubectl commands.
 	t = tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
+)
+
+const (
+	// Sort by termination timestamp in ascending order.
+	sortFieldTerminationTime = "time"
 )
 
 func RootCmd() *cobra.Command {
@@ -81,6 +90,10 @@ func RootCmd() *cobra.Command {
 				}
 				fmt.Printf("No out of memory pods found in %s namespace.\n", namespace)
 				return nil
+			}
+
+			if sortField == sortFieldTerminationTime {
+				oomPods.SortByTimestamp()
 			}
 
 			// All namespaces flag requires the extra 'NAMESPACE' heading.
@@ -126,6 +139,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
+	cmd.Flags().StringVar(&sortField, "sort-field", "", "Sort by particular field. (Only 'termination_time' is supported currently)")
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
 	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version and build information")
