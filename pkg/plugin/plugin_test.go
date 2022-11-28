@@ -145,3 +145,33 @@ func TestFilterTerminatedPods(t *testing.T) {
 	assert.Equal(t, "oomedPod", oomed[0].Name)
 
 }
+
+func TestSortByTimestamp(t *testing.T) {
+
+	now := time.Now()
+
+	times := map[string]time.Time{
+		"now": now,
+		"1d":  now.AddDate(0, 0, 1),
+		"2d":  now.AddDate(0, 0, 2),
+		"1mo": now.AddDate(0, 1, 0),
+	}
+
+	// These are not in the descending order
+	tests := TerminatedPods{
+		TerminatedPodInfo{ContainerName: "1 month", terminatedTime: times["1mo"]},
+		TerminatedPodInfo{ContainerName: "now", terminatedTime: times["now"]},
+		TerminatedPodInfo{ContainerName: "2 days", terminatedTime: times["2d"]},
+		TerminatedPodInfo{ContainerName: "1 day", terminatedTime: times["1d"]},
+	}
+
+	tests.SortByTimestamp()
+
+	assert.Equal(t, tests[0].ContainerName, "1 month")
+	assert.Equal(t, tests[1].ContainerName, "2 days")
+	assert.Equal(t, tests[2].ContainerName, "1 day")
+	assert.Equal(t, tests[3].ContainerName, "now")
+
+	t.Log("Pods are in descending order.")
+
+}
