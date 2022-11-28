@@ -65,6 +65,25 @@ my-app-5bcbcdf97-k8g8g     infoapp          1G          8G        2022-11-07 14:
 my-app-5bcbcdf97-mf65j     infoapp          1G          8G        2022-11-07 14:34:57 +0000 GMT
 ```
 
+Experimental sorting is enabled through the `--sort-field` flag. By default, this is `none`.
+At the moment, only `time` is supported which sorts by termination time of containers, this is mainly
+useful in larger outputs across all namespaces (`-A`), used in conjunction with a pipe to `tail`.
+A simple example of this in action is shown below.
+
+```
+# The default with no sorting.
+kubectl oomd -n tracing
+POD                    CONTAINER        REQUEST     LIMIT     TERMINATION TIME
+jaeger-agent-4k845     jaeger-agent     100Mi       100Mi     2022-11-11 21:06:31 +0000 GMT
+jaeger-agent-j5vb8     jaeger-agent     100Mi       100Mi     2022-11-09 23:20:38 +0000 GMT
+
+# Most recently OOMKilled pods are shown first
+kubectl oomd -n tracing --sort-field time
+POD                    CONTAINER        REQUEST     LIMIT     TERMINATION TIME
+jaeger-agent-j5vb8     jaeger-agent     100Mi       100Mi     2022-11-09 23:20:38 +0000 GMT
+jaeger-agent-4k845     jaeger-agent     100Mi       100Mi     2022-11-11 21:06:31 +0000 GMT
+```
+
 ### Development
 
 If you wish to force some `OOMKilled` for testing purposes, you can use [`oomer`](https://github.com/jdockerty/oomer)
