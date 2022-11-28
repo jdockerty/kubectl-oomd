@@ -1,4 +1,4 @@
-
+OOMER := "https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml"
 export GO111MODULE=on
 
 .PHONY: test
@@ -27,3 +27,15 @@ kubernetes-deps:
 .PHONY: setup
 setup:
 	make -C setup
+
+.PHONY: force-oom
+force-oom:
+	@kubectl apply -f $(OOMER)
+
+.PHONY: cleanup
+cleanup:
+	@kubectl delete -f $(OOMER)
+
+.PHONY: workflows-local
+workflows-local:
+	@act
