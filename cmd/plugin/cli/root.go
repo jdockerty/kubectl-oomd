@@ -145,7 +145,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
-	cmd.Flags().StringVar(&sortField, "sort-field", "", "Sort by particular field. (Only 'termination_time' is supported currently)")
+	cmd.Flags().StringVar(&sortField, "sort-field", "", "Sort by particular field. (Only 'time' is supported currently)")
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
 	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version and build information")
