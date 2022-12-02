@@ -30,6 +30,10 @@ var (
 	// Provides the `--version` or `-v` flag, displaying build/version information.
 	showVersion bool
 
+	// Provides the `--sort-field` flag, allowing sorting by field.
+	// Only 'time' is supported currently.
+	sortField string
+
 	// When using the namespace provided by the `--namespace/-n` flag or current context.
 	// This represents: Pod, Container, Request, Limit, and Termination Time
 	singleNamespaceFormatting = "%s\t%s\t%s\t%s\t%s\n"
@@ -40,6 +44,15 @@ var (
 
 	// Formatting for table output, similar to other kubectl commands.
 	t = tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
+)
+
+const (
+	// Do not use any sorting, this is the default and acts as a value used
+	// to catch other arguments that are passed in which are unsupported.
+	sortFieldDefault = "none"
+
+	// Sort by termination timestamp in ascending order.
+	sortFieldTerminationTime = "time"
 )
 
 func RootCmd() *cobra.Command {
@@ -81,6 +94,18 @@ func RootCmd() *cobra.Command {
 				}
 				fmt.Printf("No out of memory pods found in %s namespace.\n", namespace)
 				return nil
+			}
+
+			// Mutate our pods slice in-place depending on the sort-field flag
+			// that is used. The default is to do nothing to the slice; coincidentally
+			// this does sort by container name, or namespace if `--all-namespaces`
+			// flag is used.
+			switch sortField {
+			case sortFieldTerminationTime:
+				oomPods.SortByTimestamp()
+			case sortFieldDefault:
+			default:
+				return fmt.Errorf("%s is not a supported sortable field.", sortField)
 			}
 
 			// All namespaces flag requires the extra 'NAMESPACE' heading.
@@ -126,6 +151,7 @@ func RootCmd() *cobra.Command {
 
 	cobra.OnInitialize(initConfig)
 
+	cmd.Flags().StringVar(&sortField, "sort-field", "none", "Sort by particular field. (Only 'time' is supported currently)")
 	cmd.Flags().BoolVar(&noHeaders, "no-headers", false, "Don't print headers")
 	cmd.Flags().BoolVarP(&allNamespaces, "all-namespaces", "A", false, "Show OOMKilled containers across all namespaces")
 	cmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Display version and build information")

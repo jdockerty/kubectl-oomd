@@ -2,6 +2,8 @@ package plugin
 
 import (
 	"fmt"
+	"sort"
+	"time"
 
 	"golang.org/x/net/context"
 	v1 "k8s.io/api/core/v1"
@@ -11,6 +13,18 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// TerminatedPods is a wrapper type around multiple TerminatedPodInfo structs.
+type TerminatedPods []TerminatedPodInfo
+
+// SortByTimestamp sorts the terminated pods slice in ascending order, in other
+// words, it shows the first OOMKilled pod found at the top of the table and the
+// most recent one at the end.
+func (t TerminatedPods) SortByTimestamp() {
+	sort.Slice(t, func(i, j int) bool {
+		return t[i].terminatedTime.Before(t[j].terminatedTime)
+	})
+}
+
 // TerminatedPodInfo is a wrapper struct around an OOMKilled Pod's information.
 type TerminatedPodInfo struct {
 	Pod            v1.Pod
@@ -18,6 +32,10 @@ type TerminatedPodInfo struct {
 	ContainerName  string // Name of the container within the pod that was terminated, in the case of multi-container pods.
 	TerminatedTime string // When the pod was terminated
 	StartTime      string // When the pod was started during the termination period.
+
+	// Internal representation of TerminatedTime, used for operations which require
+	// the explicit time.Time type, such as sorting.
+	terminatedTime time.Time
 }
 
 // MemoryInfo is the container resource requests, specific to the memory limit and requests.
@@ -80,7 +98,7 @@ func TerminatedPodsFilter(pods []v1.Pod) []v1.Pod {
 }
 
 // BuildTerminatedPodsInfo retrieves the terminated pod information, bundled into a slice of the informational struct.
-func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]TerminatedPodInfo, error) {
+func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (TerminatedPods, error) {
 
 	pods, err := client.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
@@ -102,15 +120,16 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 				continue
 			}
 
-			startTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
-			terminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt.String()
+			containerStartTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
+			containerTerminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt
 
 			// Build our terminated pod info struct
 			info := TerminatedPodInfo{
 				Pod:            pod,
 				ContainerName:  containerStatus.Name,
-				StartTime:      startTime,
-				TerminatedTime: terminatedTime,
+				StartTime:      containerStartTime,
+				terminatedTime: containerTerminatedTime.Time,
+				TerminatedTime: containerTerminatedTime.String(),
 				Memory: MemoryInfo{
 					Limit:   pod.Spec.Containers[i].Resources.Limits.Memory().String(),
 					Request: pod.Spec.Containers[i].Resources.Requests.Memory().String(),
@@ -127,7 +146,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) ([]
 }
 
 // Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.
-func Run(configFlags *genericclioptions.ConfigFlags, namespace string) ([]TerminatedPodInfo, error) {
+func Run(configFlags *genericclioptions.ConfigFlags, namespace string) (TerminatedPods, error) {
 
 	clientset, _, err := getK8sClientAndConfig(configFlags)
 	if err != nil {

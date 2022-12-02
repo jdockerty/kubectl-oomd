@@ -16,15 +16,27 @@ var KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
 
 const (
 
-    // The namespace to use with tests that do not require access to a working cluster.
-	testNamespace            = "test-namespace"
+	// The namespace to use with tests that do not require access to a working cluster.
+	testNamespace = "test-namespace"
 
-    // The namespace defined for use with the `oomer` manifest.
+	// The namespace defined for use with the `oomer` manifest.
 	integrationTestNamespace = "oomkilled"
 
-    // A manifest which contains the `oomkilled` namespace and `oomer` deployment for testing purposes.
-	forceOOMKilledManifest   = "https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml"
+	// A manifest which contains the `oomkilled` namespace and `oomer` deployment for testing purposes.
+	forceOOMKilledManifest = "https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml"
 )
+
+func setupIntegrationTestDependencies(t *testing.T) {
+
+	err := applyOrDeleteOOMKilledManifest(false)
+	if err != nil {
+		t.Fatalf("unable to apply OOMKilled manifest: %s", err)
+	}
+	defer applyOrDeleteOOMKilledManifest(true)
+
+	t.Log("Waiting 20 seconds for pods to start being OOMKilled...")
+	time.Sleep(20 * time.Second)
+}
 
 // applyOrDeleteOOMKilledManifest is a rather hacky way to utilise `kubectl` within
 // our test to apply the oomer manifest, this means we do not have to use a large
@@ -52,15 +64,7 @@ func TestRunPlugin(t *testing.T) {
 		t.Skipf("skipping %s which requires running cluster", t.Name())
 	}
 
-	err := applyOrDeleteOOMKilledManifest(false)
-	if err != nil {
-		t.Fatalf("unable to apply OOMKilled manifest: %s", err)
-	}
-    defer applyOrDeleteOOMKilledManifest(true)
-
-	t.Log("Waiting 20 seconds for pods to start being OOMKilled...")
-	time.Sleep(20 * time.Second)
-
+	setupIntegrationTestDependencies(t)
 
 	pods, err := Run(KubernetesConfigFlags, integrationTestNamespace)
 	assert.Nil(t, err)
@@ -139,5 +143,35 @@ func TestFilterTerminatedPods(t *testing.T) {
 
 	assert.Equal(t, 1, len(oomed))
 	assert.Equal(t, "oomedPod", oomed[0].Name)
+
+}
+
+func TestSortByTimestamp(t *testing.T) {
+
+	now := time.Now()
+
+	times := map[string]time.Time{
+		"now": now,
+		"1d":  now.AddDate(0, 0, 1),
+		"2d":  now.AddDate(0, 0, 2),
+		"1mo": now.AddDate(0, 1, 0),
+	}
+
+	// These are not in the descending order
+	tests := TerminatedPods{
+		TerminatedPodInfo{ContainerName: "1 month", terminatedTime: times["1mo"]},
+		TerminatedPodInfo{ContainerName: "now", terminatedTime: times["now"]},
+		TerminatedPodInfo{ContainerName: "2 days", terminatedTime: times["2d"]},
+		TerminatedPodInfo{ContainerName: "1 day", terminatedTime: times["1d"]},
+	}
+
+	tests.SortByTimestamp()
+
+	assert.Equal(t, tests[0].ContainerName, "now")
+	assert.Equal(t, tests[1].ContainerName, "1 day")
+	assert.Equal(t, tests[2].ContainerName, "2 days")
+	assert.Equal(t, tests[3].ContainerName, "1 month")
+
+	t.Log("Pods are in descending order.")
 
 }
