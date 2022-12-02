@@ -48,7 +48,7 @@ var (
 
 const (
 	// Do not use any sorting, this is the default and acts as a value used
-	// in order to catch other values that are passed which are unsupported.
+	// to catch other arguments that are passed in which are unsupported.
 	sortFieldDefault = "none"
 
 	// Sort by termination timestamp in ascending order.
