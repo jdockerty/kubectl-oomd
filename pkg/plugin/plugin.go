@@ -59,6 +59,19 @@ func getK8sClientAndConfig(configFlags *genericclioptions.ConfigFlags) (*kuberne
 	return clientset, config, nil
 }
 
+func getContainerIndexToPodSpec(pods []v1.Pod) map[string]int {
+
+	m := make(map[string]int)
+
+	for i, p := range pods {
+		fmt.Printf("Index: %d, Pod name: %s\n", i, p.Name)
+
+		fmt.Println(p.Status.ContainerStatuses[i])
+	}
+
+	return m
+}
+
 // GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller
 // or handle the return of the all namespaces shortcut when the flag is set.
 func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNamespace string) (string, error) {
@@ -106,19 +119,20 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 	}
 
 	terminatedPods := TerminatedPodsFilter(pods.Items)
-
+	_ = getContainerIndexToPodSpec(terminatedPods)
 	var terminatedPodsInfo []TerminatedPodInfo
-
 	for _, pod := range terminatedPods {
-
+		fmt.Println(pod.Name)
 		for i, containerStatus := range pod.Status.ContainerStatuses {
 
 			// Not every container within the pod will be in a terminated state, we skip these ones.
 			// This also means we can use the relevant index to directly access the container,
 			// as we know its index within the container status list.
 			if containerStatus.LastTerminationState.Terminated == nil {
+				fmt.Printf("Skipped: %s\n", containerStatus.Name)
 				continue
 			}
+			fmt.Printf("\t%s", containerStatus.Name)
 
 			containerStartTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
 			containerTerminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt
@@ -135,14 +149,13 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 					Request: pod.Spec.Containers[i].Resources.Requests.Memory().String(),
 				},
 			}
-
 			// TODO: Since we know all pods here have been in the "terminated state", can we
 			// achieve this same result in an elegant way?
 			terminatedPodsInfo = append(terminatedPodsInfo, info)
 		}
 	}
 
-	return terminatedPodsInfo, nil
+	return nil, nil
 }
 
 // Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.
