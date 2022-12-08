@@ -59,17 +59,18 @@ func getK8sClientAndConfig(configFlags *genericclioptions.ConfigFlags) (*kuberne
 	return clientset, config, nil
 }
 
-func getContainerIndexToPodSpec(pods []v1.Pod) map[string]int {
+// getPodSpecIndex is a helper function to return the index of a container
+// within the `.spec.containers` of a Pod. This is used as the index that
+// it appears within the containerStatus field is not guaranteed to be
+// the same.
+func getPodSpecIndex(name string, pod v1.Pod) (int, error) {
 
-	m := make(map[string]int)
-
-	for i, p := range pods {
-		fmt.Printf("Index: %d, Pod name: %s\n", i, p.Name)
-
-		fmt.Println(p.Status.ContainerStatuses[i])
+	for i, c := range pod.Spec.Containers {
+		if name == c.Name {
+			return i, nil
+		}
 	}
-
-	return m
+	return -1, fmt.Errorf("unable to retrieve pod spec index for %s", name)
 }
 
 // GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller
@@ -118,24 +119,27 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
 
-	terminatedPods := TerminatedPodsFilter(pods.Items)
-	_ = getContainerIndexToPodSpec(terminatedPods)
 	var terminatedPodsInfo []TerminatedPodInfo
+
+	terminatedPods := TerminatedPodsFilter(pods.Items)
+
 	for _, pod := range terminatedPods {
-		fmt.Println(pod.Name)
 		for i, containerStatus := range pod.Status.ContainerStatuses {
 
 			// Not every container within the pod will be in a terminated state, we skip these ones.
 			// This also means we can use the relevant index to directly access the container,
 			// as we know its index within the container status list.
 			if containerStatus.LastTerminationState.Terminated == nil {
-				fmt.Printf("Skipped: %s\n", containerStatus.Name)
 				continue
 			}
-			fmt.Printf("\t%s", containerStatus.Name)
 
 			containerStartTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
 			containerTerminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt
+
+			podSpecIndex, err := getPodSpecIndex(containerStatus.Name, pod)
+			if err != nil {
+				return nil, err
+			}
 
 			// Build our terminated pod info struct
 			info := TerminatedPodInfo{
@@ -145,8 +149,8 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 				terminatedTime: containerTerminatedTime.Time,
 				TerminatedTime: containerTerminatedTime.String(),
 				Memory: MemoryInfo{
-					Limit:   pod.Spec.Containers[i].Resources.Limits.Memory().String(),
-					Request: pod.Spec.Containers[i].Resources.Requests.Memory().String(),
+					Limit:   pod.Spec.Containers[podSpecIndex].Resources.Limits.Memory().String(),
+					Request: pod.Spec.Containers[podSpecIndex].Resources.Requests.Memory().String(),
 				},
 			}
 			// TODO: Since we know all pods here have been in the "terminated state", can we
@@ -155,7 +159,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 		}
 	}
 
-	return nil, nil
+	return terminatedPodsInfo, nil
 }
 
 // Run returns the pod information for those that have been OOMKilled, this provides the plugin functionality.

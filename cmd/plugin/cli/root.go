@@ -34,7 +34,6 @@ var (
 	// Only 'time' is supported currently.
 	sortField string
 
-
 	// Formatting for table output, similar to other kubectl commands.
 	t = tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
 )
