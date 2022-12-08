@@ -124,7 +124,7 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 	terminatedPods := TerminatedPodsFilter(pods.Items)
 
 	for _, pod := range terminatedPods {
-		for i, containerStatus := range pod.Status.ContainerStatuses {
+		for _, containerStatus := range pod.Status.ContainerStatuses {
 
 			// Not every container within the pod will be in a terminated state, we skip these ones.
 			// This also means we can use the relevant index to directly access the container,
@@ -133,8 +133,8 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 				continue
 			}
 
-			containerStartTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
-			containerTerminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt
+			containerStartTime := containerStatus.LastTerminationState.Terminated.StartedAt.String()
+			containerTerminatedTime := containerStatus.LastTerminationState.Terminated.FinishedAt
 
 			podSpecIndex, err := getPodSpecIndex(containerStatus.Name, pod)
 			if err != nil {
