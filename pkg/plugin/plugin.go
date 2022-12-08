@@ -60,9 +60,9 @@ func getK8sClientAndConfig(configFlags *genericclioptions.ConfigFlags) (*kuberne
 }
 
 // getPodSpecIndex is a helper function to return the index of a container
-// within the `.spec.containers` of a Pod. This is used as the index that
-// it appears within the containerStatus field is not guaranteed to be
-// the same.
+// within the containers list of the pod specification. This is used as the
+// index, as the index which appears within the containerStatus field is not
+// guaranteed to be the same.
 func getPodSpecIndex(name string, pod v1.Pod) (int, error) {
 
 	for i, c := range pod.Spec.Containers {
