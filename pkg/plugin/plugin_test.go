@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
@@ -19,23 +20,15 @@ const (
 	// The namespace to use with tests that do not require access to a working cluster.
 	testNamespace = "test-namespace"
 
-	// The namespace defined for use with the `oomer` manifest.
-	integrationTestNamespace = "oomkilled"
-
 	// A manifest which contains the `oomkilled` namespace and `oomer` deployment for testing purposes.
 	forceOOMKilledManifest = "https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml"
 )
 
-func setupIntegrationTestDependencies(t *testing.T) {
+type RequiresClusterTests struct {
+	suite.Suite
 
-	err := applyOrDeleteOOMKilledManifest(false)
-	if err != nil {
-		t.Fatalf("unable to apply OOMKilled manifest: %s", err)
-	}
-	defer applyOrDeleteOOMKilledManifest(true)
-
-	t.Log("Waiting 20 seconds for pods to start being OOMKilled...")
-	time.Sleep(20 * time.Second)
+	// The namespace defined for use with the `oomer` manifest.
+	IntegrationTestNamespace string
 }
 
 // applyOrDeleteOOMKilledManifest is a rather hacky way to utilise `kubectl` within
@@ -56,21 +49,39 @@ func applyOrDeleteOOMKilledManifest(runDelete bool) error {
 	return nil
 }
 
+func (rc *RequiresClusterTests) SetupTest() {
+	rc.IntegrationTestNamespace = "oomkilled"
+}
+
+func (rc *RequiresClusterTests) SetupSuite() {
+	err := applyOrDeleteOOMKilledManifest(false)
+	if err != nil {
+		rc.T().Fatalf("unable to apply OOMKilled manifest: %s", err)
+	}
+
+	rc.T().Log("Waiting 30 seconds for pods to start being OOMKilled...")
+	time.Sleep(30 * time.Second)
+}
+
+func (rc *RequiresClusterTests) TearDownSuite() {
+	applyOrDeleteOOMKilledManifest(true)
+}
+
 // TestRunPlugin tests against an initialised cluster with OOMKilled pods that
 // the plugin's functionality works as expected.
-func TestRunPlugin(t *testing.T) {
+func (rc *RequiresClusterTests) TestRunPlugin() {
+	pods, err := Run(KubernetesConfigFlags, rc.IntegrationTestNamespace)
+	assert.Nil(rc.T(), err)
 
+	assert.Greater(rc.T(), len(pods), 0, "expected number of failed pods to be greater than 0, got %d", len(pods))
+}
+
+func TestRequiresClusterSuite(t *testing.T) {
 	if testing.Short() {
 		t.Skipf("skipping %s which requires running cluster", t.Name())
 	}
 
-	setupIntegrationTestDependencies(t)
-
-	pods, err := Run(KubernetesConfigFlags, integrationTestNamespace)
-	assert.Nil(t, err)
-
-	assert.Greater(t, len(pods), 0, "expected number of failed pods to be greater than 0, got %d", len(pods))
-
+	suite.Run(t, new(RequiresClusterTests))
 }
 
 func TestGetNamespace(t *testing.T) {
