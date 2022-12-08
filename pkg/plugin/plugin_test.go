@@ -76,6 +76,14 @@ func (rc *RequiresClusterTests) TestRunPlugin() {
 	assert.Greater(rc.T(), len(pods), 0, "expected number of failed pods to be greater than 0, got %d", len(pods))
 }
 
+// TODO: Read YAML stream from forceOOMKilledManifest and compare memory request/limit
+//func (rc *RequiresClusterTests) TestCorrectResources() {
+//	pods, err := Run(KubernetesConfigFlags, rc.IntegrationTestNamespace)
+//	assert.Nil(rc.T(), err)
+//
+//	assert.Greater(rc.T(), len(pods), 0, "expected number of failed pods to be greater than 0, got %d", len(pods))
+//}
+
 func TestRequiresClusterSuite(t *testing.T) {
 	if testing.Short() {
 		t.Skipf("skipping %s which requires running cluster", t.Name())
