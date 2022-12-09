@@ -1,16 +1,23 @@
 package plugin
 
 import (
+	"bufio"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/kubectl/pkg/cmd"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 var KubernetesConfigFlags = genericclioptions.NewConfigFlags(false)
@@ -47,6 +54,41 @@ func applyOrDeleteOOMKilledManifest(runDelete bool) error {
 		return err
 	}
 	return nil
+}
+
+// getMemoryRequestAndLimitFromDeploymentManifest is a helper function for retrieving the
+// string representation of a container's memory limit and request, such as "128Mi", from
+// its own manifest.
+func getMemoryRequestAndLimitFromDeploymentManifest(r io.Reader, containerIndex int) (string, string, error) {
+
+	multir := k8syaml.NewYAMLReader(bufio.NewReader(r))
+
+	for {
+
+		buf, err := multir.Read()
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return "", "", err
+		}
+
+		obj, gvk, err := scheme.Codecs.UniversalDeserializer().Decode(buf, nil, nil)
+		if err != nil {
+			return "", "", err
+		}
+
+		switch gvk.Kind {
+		case "Deployment":
+			d := obj.(*appsv1.Deployment)
+			request := d.Spec.Template.Spec.Containers[containerIndex].Resources.Requests["memory"]
+			limit := d.Spec.Template.Spec.Containers[containerIndex].Resources.Limits["memory"]
+			return request.String(), limit.String(), nil
+
+		}
+	}
+
+	return "", "", fmt.Errorf("unable to get Kind=Deployment from manifest")
 }
 
 func (rc *RequiresClusterTests) SetupTest() {
