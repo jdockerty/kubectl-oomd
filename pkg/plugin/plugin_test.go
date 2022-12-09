@@ -118,13 +118,38 @@ func (rc *RequiresClusterTests) TestRunPlugin() {
 	assert.Greater(rc.T(), len(pods), 0, "expected number of failed pods to be greater than 0, got %d", len(pods))
 }
 
-// TODO: Read YAML stream from forceOOMKilledManifest and compare memory request/limit
-//func (rc *RequiresClusterTests) TestCorrectResources() {
-//	pods, err := Run(KubernetesConfigFlags, rc.IntegrationTestNamespace)
-//	assert.Nil(rc.T(), err)
-//
-//	assert.Greater(rc.T(), len(pods), 0, "expected number of failed pods to be greater than 0, got %d", len(pods))
-//}
+func (rc *RequiresClusterTests) TestCorrectResources() {
+	res, err := http.Get(forceOOMKilledManifest)
+	if err != nil {
+		// TODO Wrap these functions in a retry as they have reliance on external factors
+		// which could cause a failure, e.g. here an issue with GitHub would cause an
+		// error with getting the manifest.
+		rc.T().Skipf("Skipping %s as could not perform GET request for the manifest", rc.T().Name())
+	}
+	defer res.Body.Close()
+
+	// We can pass containerIndex 0 here as I control the manifest we are using, so it is
+	// okay to hardcode it.
+	manifestReq, manifestLim, err := getMemoryRequestAndLimitFromDeploymentManifest(res.Body, 0)
+	assert.Nil(rc.T(), err) // We don't skip this on failure, as if we got the manifest it should be a Deployment.
+
+	pods, _ := Run(KubernetesConfigFlags, rc.IntegrationTestNamespace)
+
+	fmt.Println(manifestReq, manifestLim)
+	podMemoryRequest := pods[0].Pod.Spec.Containers[0].Resources.Requests["memory"]
+	podMemoryLimit := pods[0].Pod.Spec.Containers[0].Resources.Limits["memory"]
+
+	assert.Equal(rc.T(), podMemoryRequest.String(), manifestReq)
+	assert.Equal(rc.T(), podMemoryLimit.String(), manifestLim)
+	rc.T().Logf(
+		"\nMemory:\n\tManifest Request: %s\n\tManifest Limit: %s\n\tPod Request: %s\n\tPod Limit: %s\n",
+		manifestReq,
+		manifestLim,
+		&podMemoryRequest,
+		&podMemoryLimit,
+	)
+
+}
 
 func TestRequiresClusterSuite(t *testing.T) {
 	if testing.Short() {
