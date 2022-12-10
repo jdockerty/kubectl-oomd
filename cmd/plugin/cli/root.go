@@ -34,14 +34,6 @@ var (
 	// Only 'time' is supported currently.
 	sortField string
 
-	// When using the namespace provided by the `--namespace/-n` flag or current context.
-	// This represents: Pod, Container, Request, Limit, and Termination Time
-	singleNamespaceFormatting = "%s\t%s\t%s\t%s\t%s\n"
-
-	// When using the `all-namespaces` flag, we must show which namespace the pod was in, this becomes an extra column.
-	// This represents: Namespace, Pod, Container, Request, Limit, and Termination Time
-	allNamespacesFormatting = "%s\t%s\t%s\t%s\t%s\t%s\n"
-
 	// Formatting for table output, similar to other kubectl commands.
 	t = tabwriter.NewWriter(os.Stdout, 10, 1, 5, ' ', 0)
 )
@@ -53,6 +45,14 @@ const (
 
 	// Sort by termination timestamp in ascending order.
 	sortFieldTerminationTime = "time"
+
+	// When using the namespace provided by the `--namespace/-n` flag or current context.
+	// This represents: Pod, Container, Request, Limit, and Termination Time
+	singleNamespaceFormatting = "%s\t%s\t%s\t%s\t%s\n"
+
+	// When using the `all-namespaces` flag, we must show which namespace the pod was in, this becomes an extra column.
+	// This represents: Namespace, Pod, Container, Request, Limit, and Termination Time
+	allNamespacesFormatting = "%s\t%s\t%s\t%s\t%s\t%s\n"
 )
 
 func RootCmd() *cobra.Command {
