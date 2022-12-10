@@ -129,7 +129,7 @@ func (rc *RequiresClusterTests) TestCorrectResources() {
 	defer res.Body.Close()
 
 	// We can pass containerIndex 0 here as I control the manifest we are using, so it is
-	// okay to hardcode it.
+	// okay to hardcode it, since I know it is the first index.
 	manifestReq, manifestLim, err := getMemoryRequestAndLimitFromDeploymentManifest(res.Body, 0)
 	assert.Nil(rc.T(), err) // We don't skip this on failure, as if we got the manifest it should be a Deployment.
 
