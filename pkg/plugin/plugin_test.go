@@ -105,6 +105,8 @@ func (rc *RequiresClusterTests) SetupSuite() {
 	time.Sleep(30 * time.Second)
 }
 
+// TearDownSuite runs the deletion process against the Namespace and Deployment
+// created as part of the testing process.
 func (rc *RequiresClusterTests) TearDownSuite() {
 	applyOrDeleteOOMKilledManifest(true)
 }
