@@ -132,14 +132,15 @@ func (rc *RequiresClusterTests) TestCorrectResources() {
 
 	// We can pass containerIndex 0 here as I control the manifest we are using, so it is
 	// okay to hardcode it, since I know it is the first index.
-	manifestReq, manifestLim, err := getMemoryRequestAndLimitFromDeploymentManifest(res.Body, 0)
+	knownIndex := 0
+	manifestReq, manifestLim, err := getMemoryRequestAndLimitFromDeploymentManifest(res.Body, knownIndex)
 	assert.Nil(rc.T(), err) // We don't skip this on failure, as if we got the manifest it should be a Deployment.
 
 	pods, _ := Run(KubernetesConfigFlags, rc.IntegrationTestNamespace)
 
 	fmt.Println(manifestReq, manifestLim)
-	podMemoryRequest := pods[0].Pod.Spec.Containers[0].Resources.Requests["memory"]
-	podMemoryLimit := pods[0].Pod.Spec.Containers[0].Resources.Limits["memory"]
+	podMemoryRequest := pods[knownIndex].Pod.Spec.Containers[knownIndex].Resources.Requests["memory"]
+	podMemoryLimit := pods[knownIndex].Pod.Spec.Containers[knownIndex].Resources.Limits["memory"]
 
 	assert.Equal(rc.T(), podMemoryRequest.String(), manifestReq)
 	assert.Equal(rc.T(), podMemoryLimit.String(), manifestLim)
