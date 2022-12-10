@@ -59,6 +59,20 @@ func getK8sClientAndConfig(configFlags *genericclioptions.ConfigFlags) (*kuberne
 	return clientset, config, nil
 }
 
+// getPodSpecIndex is a helper function to return the index of a container
+// within the containers list of the pod specification. This is used as the
+// index, as the index which appears within the containerStatus field is not
+// guaranteed to be the same.
+func getPodSpecIndex(name string, pod v1.Pod) (int, error) {
+
+	for i, c := range pod.Spec.Containers {
+		if name == c.Name {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("unable to retrieve pod spec index for %s", name)
+}
+
 // GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller
 // or handle the return of the all namespaces shortcut when the flag is set.
 func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNamespace string) (string, error) {
@@ -105,13 +119,12 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
 
-	terminatedPods := TerminatedPodsFilter(pods.Items)
-
 	var terminatedPodsInfo []TerminatedPodInfo
 
-	for _, pod := range terminatedPods {
+	terminatedPods := TerminatedPodsFilter(pods.Items)
 
-		for i, containerStatus := range pod.Status.ContainerStatuses {
+	for _, pod := range terminatedPods {
+		for _, containerStatus := range pod.Status.ContainerStatuses {
 
 			// Not every container within the pod will be in a terminated state, we skip these ones.
 			// This also means we can use the relevant index to directly access the container,
@@ -120,8 +133,13 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 				continue
 			}
 
-			containerStartTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.StartedAt.String()
-			containerTerminatedTime := pod.Status.ContainerStatuses[i].LastTerminationState.Terminated.FinishedAt
+			containerStartTime := containerStatus.LastTerminationState.Terminated.StartedAt.String()
+			containerTerminatedTime := containerStatus.LastTerminationState.Terminated.FinishedAt
+
+			podSpecIndex, err := getPodSpecIndex(containerStatus.Name, pod)
+			if err != nil {
+				return nil, err
+			}
 
 			// Build our terminated pod info struct
 			info := TerminatedPodInfo{
@@ -131,11 +149,10 @@ func BuildTerminatedPodsInfo(client *kubernetes.Clientset, namespace string) (Te
 				terminatedTime: containerTerminatedTime.Time,
 				TerminatedTime: containerTerminatedTime.String(),
 				Memory: MemoryInfo{
-					Limit:   pod.Spec.Containers[i].Resources.Limits.Memory().String(),
-					Request: pod.Spec.Containers[i].Resources.Requests.Memory().String(),
+					Limit:   pod.Spec.Containers[podSpecIndex].Resources.Limits.Memory().String(),
+					Request: pod.Spec.Containers[podSpecIndex].Resources.Requests.Memory().String(),
 				},
 			}
-
 			// TODO: Since we know all pods here have been in the "terminated state", can we
 			// achieve this same result in an elegant way?
 			terminatedPodsInfo = append(terminatedPodsInfo, info)

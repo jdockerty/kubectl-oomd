@@ -86,10 +86,10 @@ jaeger-agent-4k845     jaeger-agent     100Mi       100Mi     2022-11-11 21:06:3
 
 ### Development
 
-If you wish to force some `OOMKilled` for testing purposes, you can use [`oomer`](https://github.com/jdockerty/oomer)
+If you wish to force some `OOMKilled` pods for testing purposes, you can use [`oomer`](https://github.com/jdockerty/oomer)
 or simply run
 
-    kubectl apply -f https://github.com/jdockerty/oomer/blob/main/oomer.yaml
+    kubectl apply -f https://raw.githubusercontent.com/jdockerty/oomer/main/oomer.yaml
 
 This will create the `oomkilled` namespace and a `Deployment` with pods that continually exit with code `137`,
 in order to be picked up by `oomd`.
