@@ -73,22 +73,27 @@ func getPodSpecIndex(name string, pod v1.Pod) (int, error) {
 	return -1, fmt.Errorf("unable to retrieve pod spec index for %s", name)
 }
 
-// GetNamespace will retrieve the current namespace from the provided namespace or kubeconfig file of the caller
-// or handle the return of the all namespaces shortcut when the flag is set.
+// GetNamespace will retrieve the current namespace from either:
+//	All namespaces when the boolean is set.
+//	The provided namespace by the caller
+//	Current namespace in use from the kubeconfig file
 func GetNamespace(configFlags *genericclioptions.ConfigFlags, all bool, givenNamespace string) (string, error) {
 
-	if givenNamespace == "" && all {
+	if all {
 		return metav1.NamespaceAll, nil
-	} else if givenNamespace == "" {
-		// Retrieve the current namespace from the raw kubeconfig struct
-		currentNamespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
-		if err != nil {
-			return "", fmt.Errorf("failed to during creating raw kubeconfig: %w", err)
-		}
-		return currentNamespace, nil
 	}
 
-	return givenNamespace, nil
+	if givenNamespace != "" {
+		return givenNamespace, nil
+	}
+
+	// Retrieve the current namespace from the raw kubeconfig struct
+	// when all namespaces are not requested and no namespace is given.
+	currentNamespace, _, err := configFlags.ToRawKubeConfigLoader().Namespace()
+	if err != nil {
+		return "", fmt.Errorf("failed to during creating raw kubeconfig: %w", err)
+	}
+	return currentNamespace, nil
 }
 
 // TerminatedPodsFilter is used to filter for pods that contain a terminated container, with an exit code of 137 (OOMKilled).
